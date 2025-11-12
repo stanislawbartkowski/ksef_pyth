@@ -39,6 +39,7 @@ class KSEFSDK:
             public_certificate=self._public_certificate
         )
         self._referencenumber, self._authenticationtoken = self._auth_ksef_token()
+        self._session_status()
 
     @property
     def challenge(self) -> str:
@@ -66,7 +67,7 @@ class KSEFSDK:
         response = self._hook("security/public-key-certificates", post=False)
         return response[0]["certificate"]
 
-    def _auth_ksef_token(self) -> tuple[str,str]
+    def _auth_ksef_token(self) -> tuple[str, str]:
         context = {
             "type:": "Nip",
             "value": self._nip
@@ -77,6 +78,11 @@ class KSEFSDK:
             "encryptedToken": self._encrypted_token
         }
         response = self._hook("auth/ksef-token", body=body)
-        referenceNumber= response["referenceNumber"]
+        referenceNumber = response["referenceNumber"]
         token = response["authenticationToken"]["token"]
         return referenceNumber, token
+
+    def _session_status(self) -> str:
+        url = f"auth/{self._referencenumber}"
+        response = self._hook(url, post=False)
+        return response["status"]
