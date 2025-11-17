@@ -11,21 +11,21 @@ class KSEFSDK:
     _base_url = "https://ksef-test.mf.gov.pl/api/v2/"
     #_token = "20251108-EC-24C7EAF000-FC42E257A6-41|nip-7497725064|fad169115b1e482cb4ff38718d1d676dfa1f819060df4752b534391ea4a0d594"
     _token = "20251116-EC-0317C65000-2CA83C40D9-73|nip-7497725064|80be6cfced7f44eb860aeeb644e8cffdd59bbad9e218415296db90a39e6e5370"
-    #_token = "XXXXXX"
     _nip = "7497725064"
 
     _SESSIONT = 5
 
     def __init__(self):
         self._challenge, self._timestamp = self._get_challengeandtimestamp()
-        self._public_certificate = self._get_public_certificate()
+        self._kseftoken_certificate, self._symmetrickey_certificate = self._get_public_certificate()
         self._encrypted_token = encrypt_token(
             kseftoken=self._token,
             timestamp=self._timestamp,
-            public_certificate=self._public_certificate
+            public_certificate=self._kseftoken_certificate
         )
         self._referencenumber, self._authenticationtoken = self._auth_ksef_token()
-        # self._session_status()
+        self._session_status()
+        self._access_token, self._refresh_token = self._redeem_token()
         self._symmetric_key, self._iv = get_key_and_iv()
 
     @property
@@ -39,10 +39,11 @@ class KSEFSDK:
     def _construct_url(self, endpoint: str) -> str:
         return f"{self._base_url}{endpoint}"
 
-    def _hook(self, endpoint: str, post: bool = True, dele: bool = False, body: dict = None, withbearer: bool = False) -> dict:
+    def _hook(self, endpoint: str, post: bool = True, dele: bool = False,
+              body: dict = None, withbearer: bool = False, withbeareraccess: bool = False) -> dict:
         if withbearer:
             headers = {
-                "Authorization": f"Bearer {self._authenticationtoken}"
+                "Authorization": f"Bearer {self._access_token if withbeareraccess else self._authenticationtoken}"
             }
         else:
             headers = {}
@@ -63,10 +64,14 @@ class KSEFSDK:
         response = self._hook("auth/challenge")
         return response["challenge"], response["timestamp"]
 
-    def _get_public_certificate(self) -> str:
+    def _get_public_certificate(self) -> tuple[str, str]:
         response = self._hook(
             "security/public-key-certificates", post=False)
-        return response[0]["certificate"]
+        kseftoken_certificate = next(
+            e['certificate'] for e in response if 'KsefTokenEncryption' in e['usage'])
+        symmetrickey_certificate = next(
+            e['certificate'] for e in response if 'SymmetricKeyEncryption' in e['usage'])
+        return kseftoken_certificate, symmetrickey_certificate
 
     def _auth_ksef_token(self) -> tuple[str, str]:
         context = {
@@ -99,6 +104,12 @@ class KSEFSDK:
 
         raise TimeoutError("Session activation timed out.")
 
+    def _redeem_token(self) -> tuple[str, str]:
+        response = self._hook(endpoint="auth/token/redeem", withbearer=True)
+        access_token = response["accessToken"]["token"]
+        refresh_token = response["refreshToken"]["token"]
+        return access_token, refresh_token
+
     def session_terminate(self) -> None:
         # TODO: Do not use
         # TODO: not working?
@@ -109,7 +120,7 @@ class KSEFSDK:
     def start_session(self):
         encrypted_symmetric_key = encrypt_symmetric_key(
             symmetricy_key=self._symmetric_key,
-            public_certificate=self._public_certificate
+            public_certificate=self._symmetrickey_certificate
         )
         request_data = {
             "formCode": {
@@ -123,5 +134,5 @@ class KSEFSDK:
             },
         }
         response = self._hook(endpoint="sessions/online",
-                              body=request_data, withbearer=True, post = False)
+                              body=request_data, withbearer=True, withbeareraccess=True)
         print(response)

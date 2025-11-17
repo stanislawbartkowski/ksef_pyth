@@ -20,9 +20,9 @@ def _public_key(public_certificate: str):
 def encrypt_token(kseftoken: str, timestamp: str, public_certificate: str) -> str:
     public_key = _public_key(public_certificate)
 
-    #t = datetime.datetime.fromisoformat(timestamp)
-    #t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
-    token_bytes = f"{kseftoken}|{timestamp}".encode('utf-8')
+    t = datetime.datetime.fromisoformat(timestamp)
+    t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
+    token_bytes = f"{kseftoken}|{t}".encode('utf-8')
 
     encrypted = public_key.encrypt(
         token_bytes,
