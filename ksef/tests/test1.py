@@ -8,6 +8,10 @@ def _testdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "testdata")
     return os.path.join(dir, filexml)
 
+def _workdatadir(filexml: str) -> str:
+    dir = os.path.join(os.path.dirname(__file__), "worktemp")
+    return os.path.join(dir, filexml)
+
 
 class TestKsef(unittest.TestCase):
 

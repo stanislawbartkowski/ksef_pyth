@@ -33,8 +33,11 @@ class KONWXML:
 
             elem.text = te
 
-    def _replace_all(self, prefix, d, alista):
+    def _replace_all(self, prefix: str, d: dict, alista: dict):
         self._replace_text(d)
+
+    def replace_all(self, d: dict):
+        self._replace_all(prefix="", d=d, alista=d)
 
     def _replace_linie(self, d, alista, plist, klista):
         root = self._root

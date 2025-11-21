@@ -1,6 +1,10 @@
 import os
 import shutil
 
+import xml.etree.ElementTree as et
+
+from konwdocs.konwxml import KONWXML
+
 
 def _worktempdir() -> str:
     """Zwraca ścieżkę do katalogu tymczasowego SDK KSeF."""
@@ -17,6 +21,12 @@ def _patterndir(patt: str) -> str:
 
 class KONWDOKUMENT:
 
+    DATA_WYTWORZENIA = "DATA_WYTWORZENIA"
+    DATA_WYSTAWIENIA = "DATA_WYSTAWIENIA"
+    NIP = "NIP"
+    NIP_NABYWCA = "NIP_NABYWCA"
+    NUMER_FAKTURY = "NUMER_FAKTURY"
+
     @staticmethod
     def zrob_dokument_xml(zmienne: dict) -> str:
         """Generuje XML dokumentu KSeF na podstawie słownika zmienn."""
@@ -24,3 +34,11 @@ class KONWDOKUMENT:
         dest = os.path.join(_worktempdir(), "dokument_ksef.xml")
         shutil.copyfile(sou, dest)
         return dest
+
+    @staticmethod
+    def konwertuj(sou: str, dest: str, zmienne: dict) -> None:
+        tree = et.parse(sou)
+        root = tree.getroot()
+        K = KONWXML(root=root)
+        K.replace_all(d=zmienne)
+        tree.write(dest)
