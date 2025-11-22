@@ -3,7 +3,7 @@ import shutil
 
 import xml.etree.ElementTree as et
 
-from konwdocs.konwxml import KONWXML
+from ksef.konwdocs import KONWXML
 
 
 def _worktempdir() -> str:
