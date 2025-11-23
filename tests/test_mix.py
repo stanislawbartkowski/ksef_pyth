@@ -14,11 +14,13 @@ def testdatadir(filexml: str) -> str:
 
 def workdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "worktemp")
-    os.makedirs(dir)
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
     return os.path.join(dir, filexml)
 
+
 def KS():
-    K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=T.NIP, token=T.TOKEN)
+    K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=NIP, token=TOKEN)
     return K
 
 
@@ -30,4 +32,3 @@ def gen_numer_faktry():
     nr = "FV"
     data_f = datetime.datetime.now().isoformat()
     return nr + data_f
-

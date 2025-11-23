@@ -1,28 +1,16 @@
-import os
 import unittest
 
-from sdk.ksefsdk import KSEFSDK
+from ksef import KSEFSDK, KONWDOKUMENT
 from tests import test_mix as T
-
-
-def _testdatadir(filexml: str) -> str:
-    dir = os.path.join(os.path.dirname(__file__), "testdata")
-    return os.path.join(dir, filexml)
-
-def _workdatadir(filexml: str) -> str:
-    dir = os.path.join(os.path.dirname(__file__), "worktemp")
-    return os.path.join(dir, filexml)
 
 
 class TestKsef(unittest.TestCase):
 
-    _TOKEN = "20251116-EC-0317C65000-2CA83C40D9-73|nip-7497725064|80be6cfced7f44eb860aeeb644e8cffdd59bbad9e218415296db90a39e6e5370"
-    _NIP = "7497725064"
-
     @classmethod
     def setUpClass(cls):
-        cls.ksef = KSEFSDK.initsdk(
-            what=KSEFSDK.DEVKSEF, nip=cls._NIP, token=cls._TOKEN)
+        # cls.ksef = KSEFSDK.initsdk(
+        #    what=KSEFSDK.DEVKSEF, nip=T.NIP, token=T.TOKEN)
+        cls.ksef = T.KS()
 
     @classmethod
     def tearDownClass(cls):
@@ -37,7 +25,7 @@ class TestKsef(unittest.TestCase):
 
     def test_send_incorrect_invoice(self):
         self.ksef.start_session()
-        path = _testdatadir("FA_3_Przykład_9.xml")
+        path = T.testdatadir("FA_3_Przykład_9.xml")
         print(path)
         with open(path, "r") as f:
             invoice = f.read()
@@ -49,3 +37,19 @@ class TestKsef(unittest.TestCase):
             "Błąd weryfikacji semantyki dokumentu faktury", description)
 
         self.ksef.close_session()
+
+    def test_konwertuj_plik(self):
+        inpath = T.testdatadir("FA_3_Przykład_9_pattern.xml")
+        outpath = T.workdatadir("faktura.xml")
+        zmienne = {
+            KONWDOKUMENT.DATA_WYSTAWIENIA: T.today(),
+            KONWDOKUMENT.NIP: T.NIP,
+            KONWDOKUMENT.NIP_NABYWCA: T.NIP_NABYWCA,
+            KONWDOKUMENT.NUMER_FAKTURY: T.gen_numer_faktry()
+        }
+        KONWDOKUMENT.konwertuj(sou=inpath, dest=outpath, zmienne=zmienne)
+        # odczytaj skonwertownay plik
+        with open(outpath, "r") as f:
+            invoice = f.read()
+        self.assertIn(T.NIP, invoice)
+        self.assertIn(T.NIP_NABYWCA, invoice)
