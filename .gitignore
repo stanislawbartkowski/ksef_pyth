@@ -3,4 +3,5 @@
 **/__pycache__/
 *.pyc
 ksef/worktemp/
-ksef/tests/worktemp/
+tests/worktemp/
+tests/worktemp/faktura.xml
