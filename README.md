@@ -21,8 +21,19 @@ https://ksef-test.mf.gov.pl/docs/v2/index.html
 
 W module to testowania jest zawarty fikcyjny NIP oraz testowy token. Można wykorzystać ten token lub utworzyć własny. W wersji testowej nie ma gwarancji bezpieczeństwa danych, powinny być używane wyłącznie dane fikcyjne lub zanonimowane.
 
-# Utworzenie testowgo tokena
+# Utworzenie testowego tokena
 
 https://web2te-ksef.mf.gov.pl/web/
 
 Należy zalogować się do aplikacji testowy za pomocą fikcyjnego NIP i w zakładce "Tokeny" utworzyć token ze wszystkimi uprawnieniami.
+
+# Struktura kodu
+
+* ksef/konwdocs Pomocniczy moduł umożliwiający wstawienie do wzorca XML aktualnych danych. Wykorzystywany do testowania.
+* ksef/sdk
+  * encrypt.py Pomocniczy moduł do szyfrowania i deszyfrowania danych. Wykorzystywany wewnętrznie przez ksefsdk.py
+  * konwdokument.py Pomocniczy moduł do testowania
+  * ksefsdk.py Główny moduł zawierający klasę KSEFSDK z funkcjonalnymi metodami
+
+# Zaimplementowane funkcjonalności
+
