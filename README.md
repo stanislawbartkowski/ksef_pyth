@@ -3,7 +3,6 @@ Zaimplementowany jest tutaj prosty moduł w Python 3 umożliwiający wysyłkę f
 
 Zaimplementowane są następujące funkcjonalności:
 * Inicjalizacja, autentykacja za pomocą token i rozpoczęcie sesji uwierzytelnienia
-* Rozpoczącie 
 * Otworzenie sesji interaktywnej
 * Wysłanie faktury
 * Pobranie UPO
@@ -42,3 +41,11 @@ Należy zalogować się do aplikacji testowy za pomocą fikcyjnego NIP i w zakł
 | Inicjalizacja uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1challenge/post) | /api/v2/auth/challenge | Konstruktor KSEFSDK
 | Pobranie certyfikatów | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Certyfikaty-klucza-publicznego/paths/~1api~1v2~1security~1public-key-certificates/get) | api/v2/security/public-key-certificates | Konstruktor
 | Uwierzytelnienie z wykorzystaniem tokena KSeF | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1ksef-token/post) | /api/v2/auth/ksef-token | Konstruktor 
+| Pobranie statusu uwierzytelniania | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1%7BreferenceNumber%7D/get) | /api/v2/auth/{referenceNumber} | Konstruktor
+| Pobranie tokenów dostępowych | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1token~1redeem/post) | /api/v2/auth/token/redeem | Konstruktor
+| Otwarcie sesji interaktywnej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online/post) | /api/v2/sessions/online | start_session
+| Wysłanie faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1invoices/post) | /api/v2/sessions/online/{referenceNumber}/invoices | send_invoice
+| Pobranie statusu faktury z sesji | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1api~1v2~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D/get) | /v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber} | send_invoice
+| Pobranie UPO faktury z sesji na podstawie numeru referencyjnego faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1api~1v2~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D~1upo/get) | /api/v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber}/upo | pobierz_upo
+| Zamknięcie sesji interaktywnej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
+| Unieważnienie sesji uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1api~1v2~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
