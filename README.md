@@ -1,5 +1,5 @@
 ## Opis
-Zaimplementowany jest tutaj prosty moduł umożliwiający wysyłkę faktur do KSeF 2.0 w trybie interaktywnym. Autentykacja za pomocą tokena. Moduł może być wykorzystany jako pomocnicza biblioteka do komunikacji z systemem KSeF 2.0. 
+Zaimplementowany jest tutaj prosty moduł w Python 3 umożliwiający wysyłkę faktur do KSeF 2.0 w trybie interaktywnym. Autentykacja za pomocą tokena. Moduł może być wykorzystany jako pomocnicza biblioteka do komunikacji z systemem KSeF 2.0. 
 
 Zaimplementowane są następujące funkcjonalności:
 * Inicjalizacja, autentykacja za pomocą token i rozpoczęcie sesji uwierzytelnienia
