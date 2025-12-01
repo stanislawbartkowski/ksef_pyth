@@ -229,7 +229,7 @@ class KSEFSDK:
         self._sessioninvoicereferencenumber = response["referenceNumber"]
         return self._invoice_status()
 
-    def pobierz_ufo(self) -> str:
+    def pobierz_upo(self) -> str:
         end_point = f"sessions/{self._sessionreferencenumber}/invoices/{self._invoicereferencenumber}/upo"
         response = self._hook_response(endpoint=end_point, method=self._METHODGET)
         return response.text

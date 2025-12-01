@@ -81,7 +81,7 @@ def test5():
         ok, _, numer_ksef = status
         assert ok
         print("Pobierz UPO dla wysłanej faktury")
-        upo = K.pobierz_ufo()
+        upo = K.pobierz_upo()
         print(upo)
 
     status = _send_invoice(path=outpath, action=wez_upo)

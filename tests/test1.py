@@ -87,7 +87,7 @@ class TestKsef(unittest.TestCase):
     def test_wyslij_do_ksef_i_wez_upo(self):
 
         def wez_upo():
-            upo = self.ksef.pobierz_ufo()
+            upo = self.ksef.pobierz_upo()
             print(upo)
             # sprawdz, czy plik xml
             # wyrzuci błąd, jeśli nie jest poprawny xml
