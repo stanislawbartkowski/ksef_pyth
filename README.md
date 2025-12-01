@@ -55,7 +55,7 @@ Należy zalogować się do aplikacji testowy za pomocą fikcyjnego NIP i w zakł
 
 ## Ogólny opis
 
-Jest to moduł napisany w Python 3. Ogólny schemat wykorzystanie
+Jest to moduł napisany w Python 3. Ogólny schemat wykorzystania.
 * Utworzenie klasy KSEFSDK
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
 * Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru ksef (send_invoice)
@@ -63,7 +63,7 @@ Jest to moduł napisany w Python 3. Ogólny schemat wykorzystanie
 * Zamknięcie sesji interaktywnej (close_session)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
 
-Błedy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueError. 
+Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueError. 
 
 
 ## Inicjalizacja, konstruktor KSEFSDK
