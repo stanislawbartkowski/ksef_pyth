@@ -128,7 +128,8 @@ class KSEFSDK:
             "challenge": self._challenge,
             "encryptedToken": self._encrypted_token
         }
-        response = self._hook("auth/ksef-token", body=body, bearer=self._NOBEARER)
+        response = self._hook(
+            "auth/ksef-token", body=body, bearer=self._NOBEARER)
         referenceNumber = response["referenceNumber"]
         token = response["authenticationToken"]["token"]
         return referenceNumber, token
@@ -151,7 +152,8 @@ class KSEFSDK:
         raise TimeoutError("Session activation timed out.")
 
     def _redeem_token(self) -> tuple[str, str]:
-        response = self._hook(endpoint="auth/token/redeem",bearer=self._BEARERTOKEN)
+        response = self._hook(endpoint="auth/token/redeem",
+                              bearer=self._BEARERTOKEN)
         access_token = response["accessToken"]["token"]
         refresh_token = response["refreshToken"]["token"]
         return access_token, refresh_token
@@ -231,5 +233,12 @@ class KSEFSDK:
 
     def pobierz_upo(self) -> str:
         end_point = f"sessions/{self._sessionreferencenumber}/invoices/{self._invoicereferencenumber}/upo"
-        response = self._hook_response(endpoint=end_point, method=self._METHODGET)
+        response = self._hook_response(
+            endpoint=end_point, method=self._METHODGET)
+        return response.text
+
+    def get_invoice(self, ksef_number: str) -> str:
+        end_point = f"invoices/ksef/{ksef_number}"
+        response = self._hook_response(
+            endpoint=end_point, method=self._METHODGET)
         return response.text

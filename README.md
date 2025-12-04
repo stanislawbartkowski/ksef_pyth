@@ -136,7 +136,7 @@ Zamyka sesję interaktywną rozpoczętą wywołaniem start_session.
 
 Działanie:
 
-Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSIEFSDK.
+Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
 
 # Przykłady użycia
 
