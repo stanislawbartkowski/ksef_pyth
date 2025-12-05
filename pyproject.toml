@@ -5,7 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ksef2.0_python"
 version = "0.0.1"
-dependencies = []
+dependencies = [
+  "requests",
+  "cryptography"
+]
 requires-python = ">=3.11"
 authors = [
   {name = "Stanisław Bartkowski", email = "stanislawbartkowski@gmail.com"},
