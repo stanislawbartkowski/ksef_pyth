@@ -9,6 +9,10 @@ Zaimplementowane są następujące funkcjonalności:
 * Zamknięcie sesji interaktywnej
 * Zamknięcie sesji uwierzytelniania
 
+## Instalacja
+
+> pip install git+https://github.com/stanislawbartkowski/ksef_pyth.git
+
 ## Linki
 
 https://github.com/m32/ksef
