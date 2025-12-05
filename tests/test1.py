@@ -91,7 +91,7 @@ class TestKsef(unittest.TestCase):
             print(upo)
             # sprawdz, czy plik xml
             # wyrzuci błąd, jeśli nie jest poprawny xml
-            tree = et.fromstring(upo)
+            _ = et.fromstring(upo)
 
         invoice = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice, action=wez_upo)
