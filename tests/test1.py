@@ -1,5 +1,7 @@
+from asyncio import sleep
 from typing import Callable
 import unittest
+from time import sleep
 
 from ksef import KONWDOKUMENT
 from tests import test_mix as T
@@ -91,7 +93,7 @@ class TestKsef(unittest.TestCase):
             print(upo)
             # sprawdz, czy plik xml
             # wyrzuci błąd, jeśli nie jest poprawny xml
-            tree = et.fromstring(upo)
+            _ = et.fromstring(upo)
 
         invoice = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice, action=wez_upo)
@@ -99,3 +101,33 @@ class TestKsef(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual("Sukces", description)
         self.assertNotEqual("", numerksef)
+
+    def test_pobierz_fakture_o_zlym_formacie_numeru(self):
+        with self.assertRaises(Exception) as context:
+            self.ksef.get_invoice(ksef_number="999999999999999999")
+        print(context.exception)
+        self.assertIn("is not in the correct format", str(context.exception))
+
+    def test_pobierz_fakture_o_nieistniejacym_numerze(self):
+        with self.assertRaises(Exception) as context:
+            self.ksef.get_invoice(
+                ksef_number="7497725064-20251206-0100403420A2-99")
+        print(context.exception)
+        self.assertIn("nie została znaleziona", str(context.exception))
+
+    def test_pobierz_istniejaca_fakture(self):
+        invoice = self._prepare_invoice()
+        status = self._wyslij_ksef(invoice=invoice)
+        ok, _, numerksef = status
+        self.assertTrue(ok)
+        for i in range(1, 5):
+            print(f"Próba pobrania faktury z KSeF, numer próby: {numerksef}")
+            try:
+                invoice_ksef = self.ksef.get_invoice(ksef_number=numerksef)
+                print(invoice_ksef)
+                _ = et.fromstring(invoice_ksef)
+                self.assertIn("<KSeFNumber>", invoice_ksef)
+                return
+            except Exception as e:
+                print(f"{i} Błąd pobrania faktury: {e}")
+                sleep(2*i)

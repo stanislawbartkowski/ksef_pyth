@@ -1,7 +1,7 @@
 from .ksefsdk import KSEFSDK
 from .konwdokument import KONWDOKUMENT
 
-_all = [
+__all__ = [
     "KSEFSDK",
     "KONWDOKUMENT"
 ]

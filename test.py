@@ -5,9 +5,8 @@ from tests import test_mix as T
 import datetime
 
 
-def KS():
-    K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=T.NIP, token=T.TOKEN)
-    return K
+def KS() -> KSEFSDK:
+    return T.KS()
 
 
 def _today():
@@ -78,7 +77,7 @@ def test5():
     outpath = _prepare_invoice()
 
     def wez_upo(K: KSEFSDK, status):
-        ok, _, numer_ksef = status
+        ok, _, _ = status
         assert ok
         print("Pobierz UPO dla wysłanej faktury")
         upo = K.pobierz_upo()
@@ -88,9 +87,21 @@ def test5():
     print(status)
 
 
+def test6():
+    # PRZYKLAD 6: Pobierz istniejącą fakturę
+    K = KS()
+    faktura_ksef = "7497725064-20251207-0100A07C1B9B-7C"
+    print(f"Pobierz fakturę o numerze: {faktura_ksef}")
+    faktura = K.get_invoice(ksef_number=faktura_ksef)
+    print(faktura)
+    K.session_terminate()
+
+
+
 if __name__ == "__main__":
     # test2()
-    test1()
+    # test1()
     # test3()
     # test4()
-    #test5()
+    # test5()
+    test6()
