@@ -8,6 +8,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Pobranie UPO
 * Zamknięcie sesji interaktywnej
 * Zamknięcie sesji uwierzytelniania
+* Odczytanie faktury na podstawie numer Ksef
 
 ## Instalacja
 
