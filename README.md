@@ -54,6 +54,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Pobranie UPO faktury z sesji na podstawie numeru referencyjnego faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1api~1v2~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D~1upo/get) | /api/v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber}/upo | pobierz_upo
 | Zamknięcie sesji interaktywnej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
 | Unieważnienie sesji uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1api~1v2~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
+| Odczytanie faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
 
 # Działanie
 
@@ -141,6 +142,21 @@ Zamyka sesję interaktywną rozpoczętą wywołaniem start_session.
 Działanie:
 
 Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
+
+## Odczytanie faktury według numeru Ksef
+
+*get_invoice*
+
+Parametry:
+* ksef_number Numer Ksef faktury.
+
+Zwraca:
+
+Faktury jako polik XML
+
+Działanie:
+
+Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*
 
 # Przykłady użycia
 
