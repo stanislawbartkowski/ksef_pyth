@@ -115,6 +115,10 @@ tuple[ok, error_mess, numer_ksef]
 * err_mess Jeśli wysyłka nieudana, to komunikat o przyczynie błędu (np. Niepoprawny format faktury)
 * numer_ksef Jeśli wysyłka udana, to numer KSeF wysłanej faktury
 
+Dodatkowa uwaga:
+
+W tej metodzie błąd jest zaracany na dwa sposoby. Wartość *ok* jako False oraz *err_mess* z bardziej szczegółowym komunikatem o błędzie oraz jako wyjątek HTTPError lub ValueError
+
 ## Odczytanie UPO
 
 *pobierz_upo*
