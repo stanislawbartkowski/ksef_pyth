@@ -91,10 +91,9 @@ def test6():
     # PRZYKLAD 6: Pobierz istniejącą fakturę
     K = KS()
     faktura_ksef = "7497725064-20251206-0100403420A2-86"
-    print(f"Pobierz UPO dla faktury KSeF: {faktura_ksef}")
+    print(f"Pobierz fakturę o numerze: {faktura_ksef}")
     faktura = K.get_invoice(ksef_number=faktura_ksef)
     print(faktura)
-    K.close_session()
     K.session_terminate()
 
 

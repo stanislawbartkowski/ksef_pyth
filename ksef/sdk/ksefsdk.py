@@ -239,6 +239,15 @@ class KSEFSDK:
 
     def get_invoice(self, ksef_number: str) -> str:
         end_point = f"invoices/ksef/{ksef_number}"
-        response = self._hook_response(
-            endpoint=end_point, method=self._METHODGET)
+        try:
+            response = self._hook_response(
+                endpoint=end_point, method=self._METHODGET)
+        except requests.HTTPError as e:
+            if e.response.status_code == 400:
+                exce = e.response.json()['exception']['exceptionDetailList'][0]
+                details = exce['details']
+                errmsg = " ".join(details)
+                raise ValueError(errmsg) from e
+            else:
+                raise            
         return response.text

@@ -99,3 +99,16 @@ class TestKsef(unittest.TestCase):
         self.assertTrue(ok)
         self.assertEqual("Sukces", description)
         self.assertNotEqual("", numerksef)
+
+    def test_pobierz_fakture_o_zlym_formacie_numeru(self):
+        with self.assertRaises(Exception) as context:
+            self.ksef.get_invoice(ksef_number="999999999999999999")
+        print(context.exception)
+        self.assertIn("is not in the correct format", str(context.exception))
+
+    def test_pobierz_fakture_o_nieistniejacym_numerze(self):
+        with self.assertRaises(Exception) as context:
+            self.ksef.get_invoice(
+                ksef_number="7497725064-20251206-0100403420A2-99")
+        print(context.exception)
+        self.assertIn("nie została znaleziona", str(context.exception))
