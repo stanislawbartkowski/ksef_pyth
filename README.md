@@ -145,7 +145,7 @@ Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
 
 ## Odczytanie faktury według numeru Ksef
 
-*get_invoice*
+*get_invoice(ksef_number:str)*
 
 Parametry:
 * ksef_number Numer Ksef faktury.
@@ -156,7 +156,7 @@ Faktury jako polik XML
 
 Działanie:
 
-Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*
+Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
 # Przykłady użycia
 
