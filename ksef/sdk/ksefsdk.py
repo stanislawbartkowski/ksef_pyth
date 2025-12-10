@@ -249,5 +249,22 @@ class KSEFSDK:
                 errmsg = " ".join(details)
                 raise ValueError(errmsg) from e
             else:
-                raise            
+                raise
         return response.text
+
+    def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:
+        end_point = "invoices/query/metadata?pageSize=250"
+        query = {
+            'subjectType': 'Subject2',
+            'dateRange': {
+                'dateType': 'Issue',
+                'from': date_from,
+                'to': date_to
+            }
+        }
+        response = self._hook(endpoint=end_point, body=query)
+        hasMore = response['hasMore']
+        if hasMore:
+            raise ValueError(
+                "Zbyt duża liczba faktur do pobrania (max 250), zawęź zakres dat")
+        return response['invoices']
