@@ -4,6 +4,7 @@ import unittest
 from time import sleep
 
 from ksef import KONWDOKUMENT
+from ksef.sdk.ksefsdk import KSEFSDK
 from tests import test_mix as T
 import xml.etree.ElementTree as et
 
@@ -13,8 +14,8 @@ class TestKsef(unittest.TestCase):
     # ---------------------
     # helpers
     # ---------------------
-    def _prepare_invoice(self) -> str:
-        inpath = T.testdatadir("FA_3_Przykład_9_pattern.xml")
+    def _prepare_invoice(self, patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml") -> str:
+        inpath = T.testdatadir(patt)
         outpath = T.workdatadir("faktura.xml")
         zmienne = {
             KONWDOKUMENT.DATA_WYSTAWIENIA: T.today(),
@@ -30,14 +31,17 @@ class TestKsef(unittest.TestCase):
         self.assertIn(T.NIP_NABYWCA, invoice)
         return invoice
 
-    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
-        self.ksef.start_session()
-        status = self.ksef.send_invoice(invoice=invoice)
+    def _wyslij_ksef_K(self, K: KSEFSDK, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        K.start_session()
+        status = K.send_invoice(invoice=invoice)
         print(status)
         if action is not None:
             action()
-        self.ksef.close_session()
+        K.close_session()
         return status
+
+    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        return self._wyslij_ksef_K(self.ksef, invoice, action)
 
     # ---------------------
     # test fixture
@@ -131,3 +135,37 @@ class TestKsef(unittest.TestCase):
             except Exception as e:
                 print(f"{i} Błąd pobrania faktury: {e}")
                 sleep(2*i)
+
+    def test_wyslij_fakture_blad_zalacznik(self):
+        invoice = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        print(invoice)
+        status = self._wyslij_ksef(invoice=invoice)
+        print(status)
+        ok, description, _ = status
+        self.assertFalse(ok)
+        self.assertIn(
+            "Brak możliwości wysyłania faktury z załącznikiem", description)
+
+    def test_wyslij_fakture_zakupowa_i_pobierz_metadane(self):
+        K = T.KSNABYWCA()
+        invoice = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP_8)
+        status = self._wyslij_ksef_K(K, invoice=invoice)
+        K.session_terminate()
+        print(status)
+        ok, description, numerksef = status
+        self.assertTrue(ok)
+        self.assertEqual("Sukces", description)
+        self.assertNotEqual("", numerksef)
+
+        res = self.ksef.get_invoices_zakupowe_metadata(
+            date_from="2025-11-01", date_to="2025-12-31")
+        print(res)
+        self.assertIsInstance(res, list)
+        self.assertLess(0, len(res))
+
+        invoice_meta = res[-1]
+        ksef_number = invoice_meta["ksefNumber"]
+        # odczytaj
+        invoice_ksef = self.ksef.get_invoice(ksef_number=ksef_number)
+        print(invoice_ksef)
+        _ = et.fromstring(invoice_ksef)

@@ -9,6 +9,10 @@ def KS() -> KSEFSDK:
     return T.KS()
 
 
+def KS_NABYWCA() -> KSEFSDK:
+    return T.KSNABYWCA()
+
+
 def _today():
     return datetime.datetime.now().strftime("%Y-%m-%d")
 
@@ -27,11 +31,10 @@ def test1():
     K.session_terminate()
 
 
-def _send_invoice(path, action: Callable | None = None):
+def _send_invoice_K(K: KSEFSDK, path: str, action: Callable | None = None):
     print(path)
     with open(path, "r") as f:
         invoice = f.read()
-    K = KS()
     K.start_session()
     status = K.send_invoice(invoice=invoice)
     print(status)
@@ -42,14 +45,19 @@ def _send_invoice(path, action: Callable | None = None):
     return status
 
 
+def _send_invoice(path, action: Callable | None = None):
+    K = KS()
+    return _send_invoice_K(K, path, action)
+
+
 def test2():
     # PRZYKLAD 2: wyślij niepoprawną fakture do KSEF
     path = T.testdatadir("FA_3_Przykład_9.xml")
     _send_invoice(path)
 
 
-def _prepare_invoice():
-    inpath = T.testdatadir("FA_3_Przykład_9_pattern.xml")
+def _prepare_invoice(patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml"):
+    inpath = T.testdatadir(patt)
     outpath = T.workdatadir("faktura.xml")
     zmienne = {
         KONWDOKUMENT.DATA_WYSTAWIENIA: _today(),
@@ -97,6 +105,20 @@ def test6():
     K.session_terminate()
 
 
+def test7():
+    K = KS_NABYWCA()
+    outpath = _prepare_invoice(patt=T.PRZYKLAD_ZAKUP_8)
+    status = _send_invoice_K(K, path=outpath)
+    print(status)
+    ok, errmess, numer_ksef = status
+
+
+def test8():
+    K = KS()
+    res = K.get_invoices_zakupowe_metadata(
+        date_from="2024-11-01", date_to="2025-12-31")
+    print(res)
+
 
 if __name__ == "__main__":
     # test2()
@@ -104,4 +126,6 @@ if __name__ == "__main__":
     # test3()
     # test4()
     # test5()
-    test6()
+    # test6()
+    # test7()
+    test8()
