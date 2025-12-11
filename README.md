@@ -9,6 +9,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Zamknięcie sesji interaktywnej
 * Zamknięcie sesji uwierzytelniania
 * Odczytanie faktury na podstawie numer Ksef
+* Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 
 ## Instalacja
 
