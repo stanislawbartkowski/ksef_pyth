@@ -190,7 +190,7 @@ Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszy
 Działanie:
 
 Parametr query:
-```JSON
+```python
      query = {
             'subjectType': 'Subject2',
             'dateRange': {
