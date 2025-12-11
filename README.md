@@ -56,18 +56,32 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Zamknięcie sesji interaktywnej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
 | Unieważnienie sesji uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1api~1v2~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
 | Odczytanie faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
+| Odczytanie nagłówków faktur zakupowych | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur zakupowych 
 
 # Działanie
 
 ## Ogólny opis
 
-Jest to moduł napisany w Python 3. Ogólny schemat wykorzystania.
+Jest to moduł napisany w Python 3. Scenariusze użycia
+### Wysłanie fakturt do KSef i pobranie UPO
 * Utworzenie klasy KSEFSDK
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
 * Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru ksef (send_invoice)
 * (Opcjonalnie) Odczytanie UPO (pobierz_upo)
 * Zamknięcie sesji interaktywnej (close_session)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
+
+### Odczytanie faktury na podstawie numer KSeF
+* Utworzenie klasy KSEFSDK
+* Odczytanie faktury w formacie XML (get_ivoice)
+* Zamknięcie sesji uwierzytelnienia (terminate_session)
+
+### Odczytanie nagłówków faktur zakupowych
+* Utworzenie klasy KSEFSDK
+* Pobranie nagłówków (metadata) faktur zakupowych na podstawie daty faktury (get_invoices_zakupowe_metadata)
+* (Opcjonalnie) Odczytanie treści faktury na podstawie numer KSeF (get_invoice)
+* Zamknięcie sesji uwierzytelnienia (terminate_session)
+
 
 Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueError. 
 
@@ -150,7 +164,7 @@ Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
 
 ## Odczytanie faktury według numeru Ksef
 
-*get_invoice(ksef_number:str)*
+*get_invoice(ksef_number:str)->str*
 
 Parametry:
 * ksef_number Numer Ksef faktury.
@@ -162,6 +176,31 @@ Faktury jako polik XML
 Działanie:
 
 Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
+
+## Odczytanie nagłówków faktur zakupowych na podstawie dat
+*get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
+
+Parametry:
+* date_from Data w formacie YYYY-MM-DD. Data początkowa zakresu daty wystawienia faktury
+* date_to Data w formacie YYYY-MM-DD. Data końcowa zakresu daty wystawienia faktury
+
+Zwracana wartość:
+Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszym koncie.
+
+Działanie:
+
+Parametr query:
+```JSON
+     query = {
+            'subjectType': 'Subject2',
+            'dateRange': {
+                'dateType': 'Issue',
+                'from': date_from,
+                'to': date_to
+            }
+        }
+```
+Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
 
 # Przykłady użycia
 
