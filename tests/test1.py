@@ -49,6 +49,7 @@ class TestKsef(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        T.def_logger()
         cls.ksef = T.KS()
 
     @classmethod

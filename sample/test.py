@@ -4,6 +4,8 @@ from ksef import KONWDOKUMENT
 from tests import test_mix as T
 import datetime
 
+T.def_logger()
+
 
 def KS() -> KSEFSDK:
     return T.KS()

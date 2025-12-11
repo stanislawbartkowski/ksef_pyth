@@ -12,11 +12,6 @@ from .encrypt import (
 
 def _getlogger():
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-    logFormatter = logging.Formatter("%(asctime)s %(message)s")
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setFormatter(logFormatter)
-    logger.addHandler(consoleHandler)
     return logger
 
 

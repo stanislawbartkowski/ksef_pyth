@@ -1,6 +1,7 @@
 import datetime
 import os
 from ksef import KSEFSDK
+import logging
 
 TOKEN = "20251116-EC-0317C65000-2CA83C40D9-73|nip-7497725064|80be6cfced7f44eb860aeeb644e8cffdd59bbad9e218415296db90a39e6e5370"
 NIP = "7497725064"
@@ -12,6 +13,8 @@ TOKEN_MABYWCA = "20251210-EC-49CD637000-C47EF8923C-D7|nip-7952809480|4dfe5e94a46
 PRZYKLAD_ZAKUP = "FA_3_Przykład_zakup_25.xml"
 PRZYKLAD_ZAKUP_8 = "FA_3_Przykład_zakup_8.xml"
 
+def def_logger():
+    logging.basicConfig(level=logging.DEBUG,format="%(asctime)s %(message)s")
 
 def testdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "testdata")
