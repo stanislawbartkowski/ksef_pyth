@@ -208,5 +208,13 @@ https://github.com/stanislawbartkowski/ksef_pyth/blob/main/test.py
 
 https://github.com/stanislawbartkowski/ksef_pyth/blob/main/tests/test1.py
 
+# Dev environment, happy coding
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+code .
+```
 
 
