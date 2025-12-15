@@ -170,3 +170,11 @@ class TestKsef(unittest.TestCase):
         invoice_ksef = self.ksef.get_invoice(ksef_number=ksef_number)
         print(invoice_ksef)
         _ = et.fromstring(invoice_ksef)
+
+    def test_niepoprawny_token_dla_nip(self):
+        self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
+            KSEFSDK.DEVKSEF, nip=T.NIP, token="xxxxxx yyyyyy"))
+
+    def test_niepoprawny_nip(self):
+        self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
+            KSEFSDK.DEVKSEF, nip="9999999999", token="xxxxxx yyyyyy"))

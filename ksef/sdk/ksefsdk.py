@@ -244,7 +244,7 @@ class KSEFSDK:
                 errmsg = " ".join(details)
                 raise ValueError(errmsg) from e
             else:
-                raise
+                raise e
         return response.text
 
     def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:

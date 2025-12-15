@@ -13,8 +13,10 @@ TOKEN_MABYWCA = "20251210-EC-49CD637000-C47EF8923C-D7|nip-7952809480|4dfe5e94a46
 PRZYKLAD_ZAKUP = "FA_3_Przykład_zakup_25.xml"
 PRZYKLAD_ZAKUP_8 = "FA_3_Przykład_zakup_8.xml"
 
+
 def def_logger():
-    logging.basicConfig(level=logging.DEBUG,format="%(asctime)s %(message)s")
+    logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(message)s")
+
 
 def testdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "testdata")
