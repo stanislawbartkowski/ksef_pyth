@@ -133,7 +133,7 @@ tuple[ok, error_mess, numer_ksef]
 
 Dodatkowa uwaga:
 
-W tej metodzie błąd jest zaracany na dwa sposoby. Wartość *ok* jako False oraz *err_mess* z bardziej szczegółowym komunikatem o błędzie oraz jako wyjątek HTTPError lub ValueError
+W tej metodzie błąd jest zwracany na dwa sposoby. Wartość *ok* jako False oraz *err_mess* z bardziej szczegółowym komunikatem o błędzie oraz jako wyjątek HTTPError lub ValueError
 
 ## Odczytanie UPO
 
@@ -176,7 +176,7 @@ Faktury jako polik XML
 
 Działanie:
 
-Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
+Odczytuje fakturę na podstawie numeru Ksef. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
 ## Odczytanie nagłówków faktur zakupowych na podstawie dat
 *get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
@@ -185,7 +185,7 @@ Parametry:
 * date_from Data w formacie YYYY-MM-DD. Data początkowa zakresu daty wystawienia faktury
 * date_to Data w formacie YYYY-MM-DD. Data końcowa zakresu daty wystawienia faktury
 
-Zwracana wartość:
+Zwraca:
 Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszym koncie.
 
 Działanie:
@@ -201,7 +201,7 @@ Parametr query:
             }
         }
 ```
-Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
+UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
 
 # Przykłady użycia
 
