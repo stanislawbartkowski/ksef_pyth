@@ -8,7 +8,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Pobranie UPO
 * Zamknięcie sesji interaktywnej
 * Zamknięcie sesji uwierzytelniania
-* Odczytanie faktury na podstawie numer Ksef
+* Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 
 ## Instalacja
@@ -67,7 +67,7 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 ### Wysłanie fakturt do KSef i pobranie UPO
 * Utworzenie klasy KSEFSDK
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
-* Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru ksef (send_invoice)
+* Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru KSeF (send_invoice)
 * (Opcjonalnie) Odczytanie UPO (pobierz_upo)
 * Zamknięcie sesji interaktywnej (close_session)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
