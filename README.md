@@ -89,7 +89,7 @@ Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueErro
 
 ## Inicjalizacja, konstruktor KSEFSDK
 
-*KSEFSDK.init(env: int, nip: str, token: str)*
+*KSEFSDK.initsdk(env: int, nip: str, token: str)*
 
 Parametry:
 * env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF. Uwaga: testowane tylko w środowisku KSEFSDK.DEVKSEF
