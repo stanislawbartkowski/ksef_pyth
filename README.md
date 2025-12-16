@@ -163,20 +163,20 @@ Działanie:
 
 Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
 
-## Odczytanie faktury według numeru Ksef
+## Odczytanie faktury według numeru KSef
 
 *get_invoice(ksef_number:str)->str*
 
 Parametry:
-* ksef_number Numer Ksef faktury.
+* ksef_number Numer KSeF faktury.
 
 Zwraca:
 
-Faktury jako polik XML
+Faktury jako plik XML
 
 Działanie:
 
-Odczytuje fakturę na podstawie numeru Ksef. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
+Odczytuje fakturę na podstawie numeru KSeF. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
 ## Odczytanie nagłówków faktur zakupowych na podstawie dat
 *get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
