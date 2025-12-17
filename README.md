@@ -8,8 +8,14 @@ Zaimplementowane są następujące funkcjonalności:
 * Pobranie UPO
 * Zamknięcie sesji interaktywnej
 * Zamknięcie sesji uwierzytelniania
-* Odczytanie faktury na podstawie numer Ksef
+* Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
+
+## Patrz także
+
+https://github.com/stanislawbartkowski/ksef_cli
+
+Jest to rozszerzenie umożliwiające komunikację z systemem KSeF 2.0 z poziomu command line
 
 ## Instalacja
 
@@ -67,7 +73,7 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 ### Wysłanie fakturt do KSef i pobranie UPO
 * Utworzenie klasy KSEFSDK
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
-* Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru ksef (send_invoice)
+* Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru KSeF (send_invoice)
 * (Opcjonalnie) Odczytanie UPO (pobierz_upo)
 * Zamknięcie sesji interaktywnej (close_session)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
@@ -133,7 +139,7 @@ tuple[ok, error_mess, numer_ksef]
 
 Dodatkowa uwaga:
 
-W tej metodzie błąd jest zaracany na dwa sposoby. Wartość *ok* jako False oraz *err_mess* z bardziej szczegółowym komunikatem o błędzie oraz jako wyjątek HTTPError lub ValueError
+W tej metodzie błąd jest zwracany na dwa sposoby. Wartość *ok* jako False oraz *err_mess* z bardziej szczegółowym komunikatem o błędzie oraz jako wyjątek HTTPError lub ValueError
 
 ## Odczytanie UPO
 
@@ -163,20 +169,20 @@ Działanie:
 
 Zamyka sesję uwierzytelnienia rozpoczętą w konstruktorze KSEFSDK.
 
-## Odczytanie faktury według numeru Ksef
+## Odczytanie faktury według numeru KSef
 
 *get_invoice(ksef_number:str)->str*
 
 Parametry:
-* ksef_number Numer Ksef faktury.
+* ksef_number Numer KSeF faktury.
 
 Zwraca:
 
-Faktury jako polik XML
+Faktury jako plik XML
 
 Działanie:
 
-Odczytuje fakturę na podstawie numer Ksef. Jest to numer nadawany przez Ksef po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
+Odczytuje fakturę na podstawie numeru KSeF. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
 ## Odczytanie nagłówków faktur zakupowych na podstawie dat
 *get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
@@ -185,7 +191,7 @@ Parametry:
 * date_from Data w formacie YYYY-MM-DD. Data początkowa zakresu daty wystawienia faktury
 * date_to Data w formacie YYYY-MM-DD. Data końcowa zakresu daty wystawienia faktury
 
-Zwracana wartość:
+Zwraca:
 Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszym koncie.
 
 Działanie:
@@ -201,7 +207,7 @@ Parametr query:
             }
         }
 ```
-Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
+UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
 
 # Przykłady użycia
 
