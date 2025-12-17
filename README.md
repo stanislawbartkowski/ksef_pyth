@@ -11,6 +11,12 @@ Zaimplementowane są następujące funkcjonalności:
 * Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 
+## Patrz także
+
+https://github.com/stanislawbartkowski/ksef_cli
+
+Jest to rozszerzenie umożliwiające komunkację z systemem KSeF 2.0 z poziomu command line
+
 ## Instalacja
 
 > pip install git+https://github.com/stanislawbartkowski/ksef_pyth.git
