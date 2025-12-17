@@ -10,7 +10,8 @@ name = "ksef2.0_python"
 version = "0.0.1"
 dependencies = [
   "requests",
-  "cryptography"
+  "cryptography",
+  "git+https://github.com/stanislawbartkowski/xml_konwerter.git"
 ]
 requires-python = ">=3.11"
 authors = [
