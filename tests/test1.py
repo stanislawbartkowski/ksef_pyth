@@ -1,4 +1,3 @@
-from asyncio import sleep
 from typing import Callable
 import unittest
 from time import sleep

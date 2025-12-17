@@ -3,7 +3,7 @@ import shutil
 
 import xml.etree.ElementTree as et
 
-from ksef.konwdocs import KONWXML
+from konwdocs import KONWXML, konwertujdok
 
 
 def _worktempdir() -> str:
@@ -37,8 +37,4 @@ class KONWDOKUMENT:
 
     @staticmethod
     def konwertuj(sou: str, dest: str, zmienne: dict) -> None:
-        tree = et.parse(sou)
-        root = tree.getroot()
-        K = KONWXML(root=root)
-        K.replace_all(d=zmienne)
-        tree.write(dest)
+        konwertujdok(sou=sou, dest=dest, d=zmienne)
