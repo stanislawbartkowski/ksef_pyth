@@ -15,7 +15,7 @@ Zaimplementowane są następujące funkcjonalności:
 
 https://github.com/stanislawbartkowski/ksef_cli
 
-Jest to rozszerzenie umożliwiające komunkację z systemem KSeF 2.0 z poziomu command line
+Jest to rozszerzenie umożliwiające komunikację z systemem KSeF 2.0 z poziomu command line
 
 ## Instalacja
 
