@@ -211,7 +211,7 @@ UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczyt
 
 # Przykłady użycia
 
-https://github.com/stanislawbartkowski/ksef_pyth/blob/main/test.py
+https://github.com/stanislawbartkowski/ksef_pyth/blob/main/tests/test1.py
 
 https://github.com/stanislawbartkowski/ksef_pyth/blob/main/sample/test.py
 
