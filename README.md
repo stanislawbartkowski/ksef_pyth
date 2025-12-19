@@ -11,6 +11,10 @@ Zaimplementowane są następujące funkcjonalności:
 * Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 
+## Python
+
+Testowane dla wersji: 3.10, 3.11 i 3.12
+
 ## Patrz także
 
 https://github.com/stanislawbartkowski/ksef_cli
