@@ -1,3 +1,4 @@
 requests
 cryptography
+python-dateutil
 git+https://github.com/stanislawbartkowski/xml_konwerter.git

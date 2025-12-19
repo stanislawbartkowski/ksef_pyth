@@ -3,6 +3,7 @@ import datetime
 import calendar
 import os
 import hashlib
+import dateutil
 
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -41,7 +42,8 @@ def _encrypt_public_key(public_certificate: str, to_encrypt: bytes) -> bytes:
 
 
 def encrypt_token(kseftoken: str, timestamp: str, public_certificate: str) -> str:
-    t = datetime.datetime.fromisoformat(timestamp)
+    #t = datetime.datetime.fromisoformat(timestamp)
+    t = dateutil.parser.isoparse(timestamp)
     t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
     token_bytes = _encode(f"{kseftoken}|{t}")
     encrypted = _encrypt_public_key(
