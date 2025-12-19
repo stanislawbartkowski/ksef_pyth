@@ -13,7 +13,7 @@ dependencies = [
   "cryptography",
   "xml_konwerter @ git+https://github.com/stanislawbartkowski/xml_konwerter.git"
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
   {name = "Stanisław Bartkowski", email = "stanislawbartkowski@gmail.com"},
 ]
