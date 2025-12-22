@@ -6,8 +6,8 @@ import xml.etree.ElementTree as et
 
 from ksef.sdk.ksefsdk import KSEFSDK
 
-from .konwdokument import KONWDOKUMENT
-from tests import test_mix as T
+from konwdokument import KONWDOKUMENT
+import test_mix as T
 
 class TestKsef(unittest.TestCase):
 
