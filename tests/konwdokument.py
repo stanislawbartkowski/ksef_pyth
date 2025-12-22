@@ -3,7 +3,7 @@ import shutil
 
 import xml.etree.ElementTree as et
 
-from konwdocs import KONWXML, konwertujdok
+from xml_konwerter import KONWXML, konwertujdok
 
 
 def _worktempdir() -> str:

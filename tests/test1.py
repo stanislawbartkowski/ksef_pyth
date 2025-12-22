@@ -2,11 +2,12 @@ from typing import Callable
 import unittest
 from time import sleep
 
-from ksef import KONWDOKUMENT
-from ksef.sdk.ksefsdk import KSEFSDK
-from tests import test_mix as T
 import xml.etree.ElementTree as et
 
+from ksef.sdk.ksefsdk import KSEFSDK
+
+from .konwdokument import KONWDOKUMENT
+from tests import test_mix as T
 
 class TestKsef(unittest.TestCase):
 
