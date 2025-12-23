@@ -46,11 +46,9 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 
 # Struktura kodu
 
-* ksef/konwdocs Pomocniczy moduł umożliwiający wstawienie do wzorca XML aktualnych danych. Wykorzystywany do testowania.
 * ksef/sdk
   * encrypt.py Pomocniczy moduł do szyfrowania i deszyfrowania danych. Wykorzystywany wewnętrznie przez ksefsdk.py
-  * konwdokument.py Pomocniczy moduł do testowania
-  * ksefsdk.py Główny moduł zawierający klasę KSEFSDK z funkcjonalnymi metodami
+  * ksefsdk.py Główny moduł zawierający klasę KSEFSDK z funkcjonalnymi metodami. Klasa KSEFSDK jest jedynym obiektem dostępnym zewnętrznie.
 * tests Testy unitowe
 
 # Zaimplementowane funkcjonalności
@@ -76,6 +74,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 ## Ogólny opis
 
 Jest to moduł napisany w Python 3. Scenariusze użycia
+
 ### Wysłanie fakturt do KSef i pobranie UPO
 * Utworzenie klasy KSEFSDK
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
@@ -84,7 +83,7 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 * Zamknięcie sesji interaktywnej (close_session)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
 
-### Odczytanie faktury na podstawie numer KSeF
+### Odczytanie faktury na podstawie numeru KSeF
 * Utworzenie klasy KSEFSDK
 * Odczytanie faktury w formacie XML (get_ivoice)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
@@ -94,7 +93,6 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 * Pobranie nagłówków (metadata) faktur zakupowych na podstawie daty faktury (get_invoices_zakupowe_metadata)
 * (Opcjonalnie) Odczytanie treści faktury na podstawie numer KSeF (get_invoice)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
-
 
 Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueError. 
 
@@ -115,7 +113,7 @@ Działanie:
 
 Zwraca:
 
-Zainicjalizowana klasa KSEFSDK
+Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśli wystąpił błąd, to wurzycany jest wyjątek.
 
 ## Otworzenie sesji interaktywnej
 
