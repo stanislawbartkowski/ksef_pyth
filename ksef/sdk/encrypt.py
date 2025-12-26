@@ -45,7 +45,7 @@ def _encrypt_public_key(public_certificate: str, to_encrypt: bytes) -> bytes:
 def encrypt_token(kseftoken: str, timestamp: str, public_certificate: str) -> str:
     t = dateutil.parser.isoparse(timestamp)
     t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
-    token_bytes = _encode(f"{kseftoken}|{t}")
+    token_bytes = _encode(f'{kseftoken}|{t}')
     encrypted = _encrypt_public_key(
         public_certificate=public_certificate, to_encrypt=token_bytes)
     return to_base64(encrypted)
