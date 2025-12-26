@@ -1,12 +1,15 @@
 import logging
 from time import sleep
+from typing import Optional
+import hashlib
+from collections import namedtuple
 
 import requests
 
 from .encrypt import (
     encrypt_token, get_key_and_iv,
     encrypt_symmetric_key, to_base64,
-    encrypt_invoice, calculate_hash
+    encrypt_invoice, calculate_hash, encrypt_padding
 )
 
 
@@ -23,6 +26,9 @@ def _l(info: str):
 
 
 class KSEFSDK:
+
+    INVOICES = namedtuple(typename="invoices_ksef", field_names=[
+                          "ok", "ordinalNumer", "msg", "invoiceNumber", "ksefNumber"])
 
     DEVKSEF = 0
     PREKSEF = 1
@@ -49,8 +55,11 @@ class KSEFSDK:
                 "Niepoprawne środowisko, parametr env musi mieć wartość DEVKSEF, PREKSEF lub PRODKSEF")
         return cls(url=KSEFSDK._env_dict[env], nip=nip, token=token)
 
-    _SESSIONT = 5
-    _INVOICET = 10
+    _SESSIONRATELIMITER = 5
+    _INVOICERATELIMITER = 10
+    _RATEDELAYTIME = 2
+
+    _RETRY_AFTER = 'Retry-After'
 
     def __init__(self, url: str, nip: str, token: str):
         self._base_url = url
@@ -74,7 +83,16 @@ class KSEFSDK:
     def _construct_url(self, endpoint: str) -> str:
         return f"{self._base_url}{endpoint}"
 
-    def _hook_response(self, endpoint: str, method: int = _METHODPOST, body: dict | None = None, bearer=_BEARERACCESS) -> requests.Response:
+    def _hook_response(self,
+                       endpoint: str,
+                       method: int = _METHODPOST,
+                       body: Optional[dict] = None,
+                       bearer: int = _BEARERACCESS,
+
+                       requestmethod: Optional[str] = None,
+                       data: Optional[str] = None,
+                       requestheaders: Optional[dict] = None) -> requests.Response:
+
         if bearer != self._NOBEARER:
             headers = {
                 "Authorization": f"Bearer {self._access_token if bearer == self._BEARERACCESS else self._authenticationtoken}"
@@ -82,14 +100,38 @@ class KSEFSDK:
         else:
             headers = {}
 
-        url = self._construct_url(endpoint=endpoint)
+        url = self._construct_url(
+            endpoint=endpoint) if requestmethod is None else endpoint
         _l(url)
-        if method == self._METHODDEL:
-            response = requests.delete(url, headers=headers)
-        elif method == self._METHODPOST:
-            response = requests.post(url, json=body or {}, headers=headers)
-        else:
-            response = requests.get(url, headers=headers)
+        no_request = 0
+        while True:
+            if requestmethod is not None:
+                response = requests.request(
+                    url=url, data=data, method=requestmethod, headers=requestheaders)
+            else:
+                if method == self._METHODDEL:
+                    response = requests.delete(url, headers=headers)
+                elif method == self._METHODPOST:
+                    response = requests.post(
+                        url, json=body or {}, headers=headers)
+                else:
+                    response = requests.get(url, headers=headers)
+
+            if response.status_code == 400:
+                exce = response.json()['exception']['exceptionDetailList'][0]
+                details = exce['details']
+                errmsg = " ".join(details)
+                _logger.error(errmsg)
+                raise ValueError(errmsg)
+
+            if response.status_code == 429 and self._RETRY_AFTER in response.json():
+                no_of_sec = response.json()[self._RETRY_AFTER]
+                no_request += 1
+                mess = f'Code: {response.status_code}, próba {no_request},  Czekam {no_of_sec} przed ponowną próbą'
+                _l(mess)
+                sleep(no_of_sec)
+            else:
+                break
 
         response.raise_for_status()
         return response
@@ -131,13 +173,16 @@ class KSEFSDK:
 
     def _session_status(self) -> None:
         url = f"auth/{self._referencenumber}"
-        for _ in range(self._SESSIONT):
+        sleep_time = self._RATEDELAYTIME
+        for _ in range(self._SESSIONRATELIMITER):
             response = self._hook(
                 url, method=self._METHODGET, bearer=self._BEARERTOKEN)
             status = response["status"]["code"]
             description = response["status"]["description"]
             if status == 100:
-                sleep(5)
+                sleep(sleep_time)
+                # increase by 2 seconds
+                sleep_time += 2
             elif status == 200:
                 return
             else:
@@ -161,7 +206,7 @@ class KSEFSDK:
         url = f"sessions/online/{self._sessionreferencenumber}/close"
         self._hook(url)
 
-    def start_session(self) -> None:
+    def _prepare_session_data(self) -> dict:
         encrypted_symmetric_key = encrypt_symmetric_key(
             symmetricy_key=self._symmetric_key,
             public_certificate=self._symmetrickey_certificate
@@ -177,25 +222,34 @@ class KSEFSDK:
                 "initializationVector": to_base64(self._iv)
             },
         }
+        return request_data
+
+    def start_session(self) -> None:
+        request_data = self._prepare_session_data()
         response = self._hook(endpoint="sessions/online", body=request_data)
         self._sessionreferencenumber = response["referenceNumber"]
 
-    def _invoice_status(self) -> tuple[bool, str, str]:
-        end_point = f'sessions/{self._sessionreferencenumber}/invoices/{self._sessioninvoicereferencenumber}'
-        sleep_time = 2
-        for no in range(self._INVOICET):
+    @staticmethod
+    def _daj_description(status: dict) -> str:
+        description = status["description"]
+        details = status.get("details")
+        if isinstance(details, list):
+            description += (" " + " ".join(details))
+        return description
+
+    def _invoice_status(self, end_point: Optional[str] = None) -> tuple[bool, str, str]:
+        end_point = end_point or f'sessions/{self._sessionreferencenumber}/invoices/{self._sessioninvoicereferencenumber}'
+        sleep_time = self._RATEDELAYTIME
+        for no in range(self._INVOICERATELIMITER):
             response = self._hook(endpoint=end_point, method=self._METHODGET)
             code = response["status"]["code"]
             # stworz komunikat
-            description = response["status"]["description"]
-            details = response["status"].get("details")
-            if isinstance(details, list):
-                description += (" " + " ".join(details))
+            description = self._daj_description(response["status"])
 
             # czy w trakcie przetwarzania
             if code == 100 or code == 150:
                 _l(description)
-                _l(f"Próba {no+1}, max {self._INVOICET}, czekam {sleep_time} sekund")
+                _l(f"Próba {no+1}, max {self._INVOICERATELIMITER}, czekam {sleep_time} sekund")
                 sleep(sleep_time)
                 sleep_time += 2
                 # spróbuj jeszcze raz
@@ -234,17 +288,8 @@ class KSEFSDK:
 
     def get_invoice(self, ksef_number: str) -> str:
         end_point = f"invoices/ksef/{ksef_number}"
-        try:
-            response = self._hook_response(
-                endpoint=end_point, method=self._METHODGET)
-        except requests.HTTPError as e:
-            if e.response.status_code == 400:
-                exce = e.response.json()['exception']['exceptionDetailList'][0]
-                details = exce['details']
-                errmsg = " ".join(details)
-                raise ValueError(errmsg) from e
-            else:
-                raise e
+        response = self._hook_response(
+            endpoint=end_point, method=self._METHODGET)
         return response.text
 
     def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:
@@ -263,3 +308,72 @@ class KSEFSDK:
             raise ValueError(
                 "Zbyt duża liczba faktur do pobrania (max 250), zawęź zakres dat")
         return response['invoices']
+
+    def send_batch_session_bytes(self, payload: list[bytes]) -> tuple[bool, str, list[INVOICES]]:
+
+        request_data = self._prepare_session_data()
+        fileSize = 0
+        crc = hashlib.sha256()
+        fileParts = []
+        e_data = {}
+        for partno, b in enumerate(payload):
+            fileSize += len(b)
+            crc.update(b)
+
+            encrypted_data = encrypt_padding(
+                symmetric_key=self._symmetric_key, iv=self._iv, b=b)
+            e_data[partno+1] = encrypted_data
+            fileParts.append(
+                {
+                    'ordinalNumber': partno+1,
+                    'fileSize': len(encrypted_data),
+                    'fileHash': to_base64(hashlib.sha256(encrypted_data).digest())
+                }
+            )
+        request_data.update({
+            'batchFile': {
+                'fileSize': fileSize,
+                'fileHash': to_base64(crc.digest()),
+                'fileParts': fileParts
+            }
+        })
+        end_point = 'sessions/batch'
+        response = self._hook(endpoint=end_point, body=request_data)
+        self._invoicereferencenumber = response["referenceNumber"]
+        partUpload = response['partUploadRequests']
+        for p in partUpload:
+            method = p['method']
+            number = p['ordinalNumber']
+            encrypted_data = e_data[number]
+            url = p['url']
+            headers = p['headers']
+            msg = f'Wysyłka części numer {number}'
+            _l(msg)
+            self._hook_response(
+                endpoint=url, data=encrypted_data, requestmethod=method, requestheaders=headers)
+        # zamknięcie
+        end_point = f'sessions/batch/{self._invoicereferencenumber}/close'
+        response = self._hook(endpoint=end_point)
+        # teraz czekanie na zakończenie przetwarzania
+        end_point = f"sessions/{self._invoicereferencenumber}"
+        ok, msg, _ = self._invoice_status(end_point=end_point)
+
+        # sprawdz faktury
+        end_point = f'/sessions/{self._invoicereferencenumber}/invoices'
+        response = self._hook(endpoint=end_point, method=self._METHODGET)
+        print(response)
+        res_invoices = []
+        invoices = response['invoices']
+        for i in invoices:
+            ordinalNumber = i["ordinalNumber"]
+            status = i["status"]
+            invoiceNumber = i.get('invoiceNumber')
+            ksefNumber = i.get('ksefNumber')
+            ok = status['code'] == 200
+            description = self._daj_description(status)
+            res_invoices.append(
+                self.INVOICES(ok=ok, ordinalNumer=ordinalNumber, msg=description,
+                              invoiceNumber=invoiceNumber, ksefNumber=ksefNumber)
+            )
+
+        return ok, msg, res_invoices

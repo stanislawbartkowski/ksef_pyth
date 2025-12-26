@@ -1,8 +1,8 @@
 from typing import Callable
 from ksef import KSEFSDK
-from ksef import KONWDOKUMENT
 from tests import test_mix as T
 import datetime
+from tests.konwdokument import KONWDOKUMENT
 
 T.def_logger()
 
@@ -118,9 +118,15 @@ def test7():
 def test8():
     K = KS()
     res = K.get_invoices_zakupowe_metadata(
-        date_from="2024-11-01", date_to="2025-12-31")
+        date_from="2025-11-01", date_to="2025-12-31")
     print(res)
+    K.session_terminate()
 
+def test9():
+    K = KS()
+    b = b'111111111'
+    K.send_batch_session_bytes(payload=[b])
+    K.session_terminate()
 
 if __name__ == "__main__":
     # test2()
@@ -130,4 +136,5 @@ if __name__ == "__main__":
     # test5()
     # test6()
     # test7()
-    test8()
+    #test8()
+    test9()

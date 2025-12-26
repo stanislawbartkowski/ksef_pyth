@@ -1,5 +1,4 @@
 import base64
-import datetime
 import calendar
 import os
 import hashlib
@@ -7,9 +6,11 @@ import dateutil
 
 from cryptography import x509
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import padding as t_padding
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes, base
 
 
 def _encode(s: str) -> bytes:
@@ -42,7 +43,6 @@ def _encrypt_public_key(public_certificate: str, to_encrypt: bytes) -> bytes:
 
 
 def encrypt_token(kseftoken: str, timestamp: str, public_certificate: str) -> str:
-    #t = datetime.datetime.fromisoformat(timestamp)
     t = dateutil.parser.isoparse(timestamp)
     t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
     token_bytes = _encode(f"{kseftoken}|{t}")
@@ -69,14 +69,19 @@ def _pad(data: bytes) -> bytes:
     return data + padding
 
 
-def encrypt_invoice(symmetric_key: bytes, iv: bytes, invoice: str) -> tuple[int, bytes]:
-    invoice_bytes = _encode(invoice)
+def _daj_cipher_encryptor(symmetric_key: bytes, iv: bytes) -> base.CipherContext:
     cipher = Cipher(
         algorithms.AES(symmetric_key),
         modes.CBC(iv),
         backend=default_backend()
     )
     encryptor = cipher.encryptor()
+    return encryptor
+
+
+def encrypt_invoice(symmetric_key: bytes, iv: bytes, invoice: str) -> tuple[int, bytes]:
+    invoice_bytes = _encode(invoice)
+    encryptor = _daj_cipher_encryptor(symmetric_key=symmetric_key, iv=iv)
     padded_invoice = _pad(invoice_bytes)
     encrypted_invoice = encryptor.update(padded_invoice) + encryptor.finalize()
     return len(invoice_bytes), encrypted_invoice
@@ -86,3 +91,13 @@ def calculate_hash(data: bytes | str) -> str:
     if isinstance(data, str):
         data = _encode(data)
     return base64.b64encode(hashlib.sha256(data).digest()).decode()
+
+
+def encrypt_padding(symmetric_key: bytes, iv: bytes, b: bytes) -> bytes:
+    padder = t_padding.PKCS7(algorithms.AES(symmetric_key).block_size).padder()
+    padded_data = padder.update(b) + padder.finalize()
+
+    encryptor = _daj_cipher_encryptor(symmetric_key, iv)
+    encrypted_data = encryptor.update(
+        padded_data) + encryptor.finalize()
+    return encrypted_data

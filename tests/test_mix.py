@@ -22,7 +22,6 @@ def testdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "testdata")
     return os.path.join(dir, filexml)
 
-
 def workdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "worktemp")
     if not os.path.isdir(dir):

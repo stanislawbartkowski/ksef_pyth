@@ -1,6 +1,11 @@
 from typing import Callable
-import unittest
 from time import sleep
+import io
+import tempfile
+
+import unittest
+import zlib
+import zipfile
 
 import xml.etree.ElementTree as et
 
@@ -9,12 +14,13 @@ from ksef.sdk.ksefsdk import KSEFSDK
 from konwdokument import KONWDOKUMENT
 import test_mix as T
 
-class TestKsef(unittest.TestCase):
+
+class TestKsefMixim(unittest.TestCase):
 
     # ---------------------
     # helpers
     # ---------------------
-    def _prepare_invoice(self, patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml") -> str:
+    def _konw_invoice(self, patt: str) -> str:
         inpath = T.testdatadir(patt)
         outpath = T.workdatadir("faktura.xml")
         zmienne = {
@@ -24,24 +30,16 @@ class TestKsef(unittest.TestCase):
             KONWDOKUMENT.NUMER_FAKTURY: T.gen_numer_faktry()
         }
         KONWDOKUMENT.konwertuj(sou=inpath, dest=outpath, zmienne=zmienne)
+        return outpath
+
+    def _prepare_invoice(self, patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml") -> str:
+        outpath = self._konw_invoice(patt=patt)
         # odczytaj skonwertowany plik
         with open(outpath, "r") as f:
             invoice = f.read()
         self.assertIn(T.NIP, invoice)
         self.assertIn(T.NIP_NABYWCA, invoice)
         return invoice
-
-    def _wyslij_ksef_K(self, K: KSEFSDK, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
-        K.start_session()
-        status = K.send_invoice(invoice=invoice)
-        print(status)
-        if action is not None:
-            action()
-        K.close_session()
-        return status
-
-    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
-        return self._wyslij_ksef_K(self.ksef, invoice, action)
 
     # ---------------------
     # test fixture
@@ -55,6 +53,25 @@ class TestKsef(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.ksef.session_terminate()
+
+
+class TestKsefOnLine(TestKsefMixim):
+
+    # ---------------------
+    # helpers
+    # ---------------------
+
+    def _wyslij_ksef_K(self, K: KSEFSDK, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        K.start_session()
+        status = K.send_invoice(invoice=invoice)
+        print(status)
+        if action is not None:
+            action()
+        K.close_session()
+        return status
+
+    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        return self._wyslij_ksef_K(self.ksef, invoice, action)
 
     # -------------------
     # test suite
@@ -178,3 +195,53 @@ class TestKsef(unittest.TestCase):
     def test_niepoprawny_nip(self):
         self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
             KSEFSDK.DEVKSEF, nip="9999999999", token="xxxxxx yyyyyy"))
+
+
+class TestKsefBatch(TestKsefMixim):
+
+    # -----------
+    # helper
+    # -----------
+
+    @staticmethod
+    def _zip_b(b: str):
+        fileobj = io.BytesIO()
+
+        with tempfile.NamedTemporaryFile(mode="w") as t, io.BytesIO() as fileobj:
+            with zipfile.ZipFile(fileobj, 'w') as zip:
+                zip.writestr(t.name, b)
+            zzip = fileobj.getvalue()
+            return zzip
+
+    def test_zla_kompresja(self):
+        b = b'111111111'
+        ok, msg = self.ksef.send_batch_session_bytes(payload=[b])
+        self.assertFalse(ok)
+        print(msg)
+        self.assertIn("Błąd dekompresji", msg)
+
+    def test_błędna_faktura(self):
+        b = '111111111'
+        zzip = self._zip_b(b)
+        ok, msg, invoices = self.ksef.send_batch_session_bytes(payload=[zzip])
+        self.assertFalse(ok)
+        print(msg)
+        # kompresja jest teraz poprawna
+        self.assertIn('brak poprawnych', msg)
+        print(invoices)
+        self.assertEqual(1, len(invoices))
+        i = invoices[0]
+        self.assertFalse(i.ok)
+        self.assertIn('Nieprawidłowy XML', i.msg)
+
+    def test_proba_wyslania(self):
+        invoice = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        zzip = self._zip_b(invoice)
+        ok, msg, invoices = self.ksef.send_batch_session_bytes(payload=[zzip])
+        self.assertFalse(ok)
+        print(msg)
+        self.assertIn('brak poprawnych', msg)
+        print(invoices)
+        i = invoices[0]
+        self.assertFalse(i.ok)
+        self.assertIn('nie może być późniejsza niż data', i.msg)
