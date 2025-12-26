@@ -10,6 +10,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Zamknięcie sesji uwierzytelniania
 * Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
+* Wysłanie paczki faktur w trybie wsadowym (batchowym)
 
 ## Python
 
@@ -68,6 +69,9 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Unieważnienie sesji uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1api~1v2~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
 | Odczytanie faktury | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
 | Odczytanie nagłówków faktur zakupowych | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur zakupowych 
+| Otwarcie sesji wsadowej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post) | /api/v2/sessions/batch | send_batch_session_bytes
+| Zamknięcie sesji wsadowej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch~1%7BreferenceNumber%7D~1close/post) | /api/v2/sessions/batch/{referenceNumber}/close | send_batch_session_bytes
+| Pobranie faktur sesji | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices/get) | /api/v2/sessions/{referenceNumber}/invoices | send_batch_session_bytes
 
 # Działanie
 
@@ -147,15 +151,18 @@ W tej metodzie błąd jest zwracany na dwa sposoby. Wartość *ok* jako False or
 
 ## Odczytanie UPO
 
-*pobierz_upo*
+*pobierz_upo(invoicereferencenumnber)*
+
+Parametry
+* invoicereferencenumnber Dla sesji interaktywnej powinno być pominięte. Dla sesji wsadowej musi być ustawiony *invoicereferencenumber* odczytany z wyniku metody *send_batch_session_bytes*
 
 Działanie:
 
-Pobiera UPO ostatnio przesłanej faktury jeśli faktura została wysłana z sukcesem. Musi być wywołana bezpośrednio po send_invoice.
+Pobiera UPO ostatnio przesłanej faktury jeśli faktura została wysłana z sukcesem. Musi być wywołana bezpośrednio po send_invoice. Dla sesji wsadowej wymaga podania parametru. Dla sesji wsadowej jest alternatywna metoda pobierania pliku UPO.
 
 Zwraca:
 
-UPO w postaci stringu.
+UPO w postaci stringu w formacie XML
 
 ## Zamknięcie sesji interaktywnej
 
@@ -212,6 +219,40 @@ Parametr query:
         }
 ```
 UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
+
+## Wysłanie paczki faktur w trybie wsadowym
+
+Tryb wsadowy ma następujące zalety:
+* Wysyłanie faktur z załącznikami
+* Wiele faktur za pomocą jednego wywołania
+* Duża liczba faktur w jednej sesji, rozmiar danych do 5GB
+* UWAGA: metoda nie kompresuje danych. Dane przekazane do metody muszą już być skompresowane do postaci ZIP.
+
+* send_batch_session_bytes(self, payload: Generator[bytes, None, None], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:*
+
+Parametry:
+* payload Generator zwracający kolejne porcje danych. Dane muszą być zgodne z warunkami opisanymi w metodzie [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post). Skomasowane dane muszą tworzyć prawidłowo skompresowany plik w formacie ZIP
+* wez_upo Parametr opcjonalny. Jeśli jest zdefiniowany, to umożliwia natychmiastowe pobranie pliku UPO dla faktur zaakceptowanych w systemie KSeF 2.0
+
+Zwracana wartość tuple[bool, str, list[INVOICES]]
+* ok True/False, sesja zakończona sukcesem.
+* msg Komunikat o błędzie w razie niepowodzenia
+* invoices List informacji o wysłanych i zaakceptowanych fakturach. Zawiera informacje zarówno o fakturach zaakceptowanych z sukcesem oraz także o fakturach odrzuconych. Jeden element listy zawiera informacje:
+  * ok True/False Faktura zaakceptowana lub nie
+  * ordinalNumber Numer sekwencyjny faktury w paczce (od 1)
+  * msg Komunikat o błędzie jeśli faktura odrzucona
+  * invoiceNumner Numer faktury
+  * ksefNumber Jeśli faktura zaakceptowana w systemie KSeF, to nadany numer KSeF
+  * referenceNumber Jesli faktura zaakceptowana, to referenceNumber który może być użyty do pobrania UPO (metoda pobierz_upo)
+ 
+ Sekwencja działań
+
+ * Przegląda *payload*, szyfruje poszczególne porcje danych i zapamiętuje w plikach tymczasowym.
+ * Wywołuje *Otwarcie sesji wsadowej*
+ * Przesyła kolejne zaszyfrowane porcje danych na podstawie wyniku z *Otwarcie sesji wsadowej*. Pliki tymczasowe są usuwane.
+ * Wywołuje *Zamknięcie sesji wsadowej* co inicjalizuje przetwarzanie paczki faktur
+ * Czeka na zakończenie przetwarzania, wywołanie *Pobranie statusu sesji*
+ * Odczytuje listę faktur po zakończeniu sesji wywołując *Pobranie faktur sesji* i tworzy dane wynikowe. Dla faktur zaakceptowanych wywołuje metodę *wez_upo* 
 
 # Przykłady użycia
 
