@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Optional
 from time import sleep
 import io
 import tempfile
@@ -209,12 +209,15 @@ class TestKsefBatch(TestKsefMixim):
     # -----------
 
     @staticmethod
-    def _zip_b(b: str):
+    def _zip_b(b: str, b1: Optional[str] = None):
         fileobj = io.BytesIO()
 
         with tempfile.NamedTemporaryFile(mode="w") as t, io.BytesIO() as fileobj:
             with zipfile.ZipFile(fileobj, 'w') as zip:
-                zip.writestr(t.name, b)
+                zip.writestr("name.zip", b)
+                if b1 is not None:
+                    zip.writestr("name1.zip", b1)
+
             zzip = fileobj.getvalue()
             return zzip
 
@@ -287,3 +290,37 @@ class TestKsefBatch(TestKsefMixim):
         # wez fakture
         ksef_number = i.ksefNumber
         self._wez_fakture(ksef_number=ksef_number, invoice_n=i.invoiceNumber)
+
+    def test_wyslij_dwie_faktury(self):
+        invoice, invoice_n = self._prepare_invoice()
+        invoice1, invoice_n1 = self._prepare_invoice()
+        zzip = self._zip_b(b=invoice, b1=invoice1)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        self.assertTrue(ok)
+        print(ok, msg, invoices)
+        self.assertEqual(2, len(invoices))
+        i0 = invoices[0]
+        i1 = invoices[1]
+        # pierwsza faktura
+        ksef_number = i0.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
+        # druga faktura
+        ksef_number = i1.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n1)
+
+    def test_wyslij_fakture_poprawna_i_niepoprawna(self):
+        invoice, invoice_n = self._prepare_invoice()
+        invoice_zla, _ = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        zzip = self._zip_b(b=invoice, b1=invoice_zla)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        print(ok, msg, invoices)
+        # powinno być ok, awet jesli faktura błędna
+        self.assertTrue(ok)
+        # pierwsza faktura poprawna
+        self.assertEqual(2, len(invoices))
+        i0 = invoices[0]
+        i1 = invoices[1]
+        ksef_number = i0.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
+        # druga niepoprawna
+        self.assertFalse(i1.ok)
