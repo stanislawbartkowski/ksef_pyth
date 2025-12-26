@@ -1,9 +1,10 @@
 import logging
 from time import sleep
 import os
-from typing import Callable, Generator, Optional
+from typing import Callable, Optional
 import hashlib
 from collections import namedtuple
+from collections.abc import Iterator
 import tempfile
 
 import requests
@@ -314,7 +315,7 @@ class KSEFSDK:
                 'Zbyt duża liczba faktur do pobrania (max 250), zawęź zakres dat')
         return response['invoices']
 
-    def send_batch_session_bytes(self, payload: Generator[bytes, None, None], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:
+    def send_batch_session_bytes(self, payload: Iterator[bytes], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:
 
         request_data = self._prepare_session_data()
         fileSize = 0

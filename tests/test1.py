@@ -4,7 +4,6 @@ import io
 import tempfile
 
 import unittest
-import zlib
 import zipfile
 
 import xml.etree.ElementTree as et
@@ -226,6 +225,7 @@ class TestKsefBatch(TestKsefMixim):
         def _wez_upo(i, upo_xml):
             print(i, upo_xml)
             _ = et.fromstring(upo_xml)
+
         res = self.ksef.send_batch_session_bytes(
             payload=(b for b in payload), wez_upo=_wez_upo)
         return res
