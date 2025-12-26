@@ -228,7 +228,8 @@ Tryb wsadowy ma następujące zalety:
 * Duża liczba faktur w jednej sesji, rozmiar danych do 5GB
 * UWAGA: metoda nie kompresuje danych. Dane przekazane do metody muszą już być skompresowane do postaci ZIP.
 
-* send_batch_session_bytes(self, payload: Generator[bytes, None, None], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:*
+
+*send_batch_session_bytes(self, payload: Generator[bytes, None, None], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:*
 
 Parametry:
 * payload Generator zwracający kolejne porcje danych. Dane muszą być zgodne z warunkami opisanymi w metodzie [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post). Skomasowane dane muszą tworzyć prawidłowo skompresowany plik w formacie ZIP
