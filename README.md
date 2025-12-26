@@ -235,7 +235,7 @@ Parametry:
 * wez_upo Parametr opcjonalny. Jeśli jest zdefiniowany, to umożliwia natychmiastowe pobranie pliku UPO dla faktur zaakceptowanych w systemie KSeF 2.0
 
 Zwracana wartość tuple[bool, str, list[INVOICES]]
-* ok True/False, sesja zakończona sukcesem.
+* ok True/False, sesja zakończona sukcesem. "Sukces" oznacze, że dane były poprawnie skompresowane i przesłane. Natomiast nie oznacza, że wszystkie faktury w paczce zostały zaakceptowane. Jeśli część faktur została odrzucona, to sesja będzie także oznaczona jako "Sukces", zaś status poszczególnych faktur trzeba rozpoznać na podstawie wyniku wywołania.
 * msg Komunikat o błędzie w razie niepowodzenia
 * invoices List informacji o wysłanych i zaakceptowanych fakturach. Zawiera informacje zarówno o fakturach zaakceptowanych z sukcesem oraz także o fakturach odrzuconych. Jeden element listy zawiera informacje:
   * ok True/False Faktura zaakceptowana lub nie
