@@ -321,7 +321,7 @@ class KSEFSDK:
         fileSize = 0
         crc = hashlib.sha256()
         fileParts = []
-        # przechowuje nazwę pliku tymaczasowego dla poszczegółlych części
+        # przechowuje nazwę pliku tymczasowego dla poszczególnych części
         e_data: dict[int, str] = {}
         # pierwsza faza, przegląda payload, koduje i zapamiętuje cześci w plikach tymczasowych
         for partno, b in enumerate(payload):
@@ -330,7 +330,7 @@ class KSEFSDK:
 
             encrypted_data = encrypt_padding(
                 symmetric_key=self._symmetric_key, iv=self._iv, b=b)
-            # zapamiętaj zakodowane dane w pliku tymaczasowym
+            # zapamiętaj zakodowane dane w pliku tymczasowym
             with tempfile.NamedTemporaryFile("wb", delete=False) as t:
                 t.write(encrypted_data)
                 e_data[partno+1] = t.name
@@ -375,10 +375,9 @@ class KSEFSDK:
         end_point = f'sessions/{self._sessionreferencenumber}'
         ok_session, msg, _ = self._invoice_status(end_point=end_point)
 
-        # sprawdz faktury
+        # sprawdz faktury i przygotuj wynik
         end_point = f'/sessions/{self._sessionreferencenumber}/invoices'
         response = self._hook(endpoint=end_point, method=self._METHODGET)
-        print(response)
         res_invoices = []
         invoices = response['invoices']
         for i in invoices:
@@ -396,6 +395,7 @@ class KSEFSDK:
             i = self.INVOICES(ok=ok, ordinalNumer=ordinalNumber, msg=description,
                               invoiceNumber=invoiceNumber, ksefNumber=ksefNumber, referenceNumber=referenceNumber)
             res_invoices.append(i)
+            # pobierz UPO
             if wez_upo is not None and upo is not None:
                 response = self._hook_response(
                     endpoint=upo, requestmethod='GET')
