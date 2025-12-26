@@ -215,7 +215,7 @@ class TestKsefBatch(TestKsefMixim):
 
     def test_zla_kompresja(self):
         b = b'111111111'
-        ok, msg = self.ksef.send_batch_session_bytes(payload=[b])
+        ok, msg, _ = self.ksef.send_batch_session_bytes(payload=[b])
         self.assertFalse(ok)
         print(msg)
         self.assertIn("Błąd dekompresji", msg)
