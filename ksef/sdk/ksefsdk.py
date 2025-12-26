@@ -372,7 +372,7 @@ class KSEFSDK:
         response = self._hook(endpoint=end_point)
         # teraz czekanie na zakończenie przetwarzania
         end_point = f'sessions/{self._sessionreferencenumber}'
-        ok, msg, _ = self._invoice_status(end_point=end_point)
+        ok_session, msg, _ = self._invoice_status(end_point=end_point)
 
         # sprawdz faktury
         end_point = f'/sessions/{self._sessionreferencenumber}/invoices'
@@ -401,4 +401,4 @@ class KSEFSDK:
                 xml_upo = response.text
                 wez_upo(i, xml_upo)
 
-        return ok, msg, res_invoices
+        return ok_session, msg, res_invoices
