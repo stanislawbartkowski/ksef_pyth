@@ -241,7 +241,7 @@ Zwracana wartość tuple[bool, str, list[INVOICES]]
   * ok True/False Faktura zaakceptowana lub nie
   * ordinalNumber Numer sekwencyjny faktury w paczce (od 1)
   * msg Komunikat o błędzie jeśli faktura odrzucona
-  * invoiceNumner Numer faktury
+  * invoiceNumber Numer faktury
   * ksefNumber Jeśli faktura zaakceptowana w systemie KSeF, to nadany numer KSeF
   * referenceNumber Jesli faktura zaakceptowana, to referenceNumber który może być użyty do pobrania UPO (metoda pobierz_upo)
  
