@@ -1,6 +1,11 @@
-from typing import Callable
-import unittest
+from typing import Callable, Optional
 from time import sleep
+import io
+import tempfile
+
+import unittest
+import zlib
+import zipfile
 
 import xml.etree.ElementTree as et
 
@@ -9,39 +14,47 @@ from ksef.sdk.ksefsdk import KSEFSDK
 from konwdokument import KONWDOKUMENT
 import test_mix as T
 
-class TestKsef(unittest.TestCase):
+
+class TestKsefMixim(unittest.TestCase):
 
     # ---------------------
     # helpers
     # ---------------------
-    def _prepare_invoice(self, patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml") -> str:
+    def _konw_invoice(self, patt: str) -> tuple[str, str]:
         inpath = T.testdatadir(patt)
         outpath = T.workdatadir("faktura.xml")
+        invoice_n = T.gen_numer_faktry()
         zmienne = {
             KONWDOKUMENT.DATA_WYSTAWIENIA: T.today(),
             KONWDOKUMENT.NIP: T.NIP,
             KONWDOKUMENT.NIP_NABYWCA: T.NIP_NABYWCA,
-            KONWDOKUMENT.NUMER_FAKTURY: T.gen_numer_faktry()
+            KONWDOKUMENT.NUMER_FAKTURY: invoice_n
         }
         KONWDOKUMENT.konwertuj(sou=inpath, dest=outpath, zmienne=zmienne)
+        return outpath, invoice_n
+
+    def _prepare_invoice(self, patt: str = "FA_3_Przykład_9_sprzedaz_pattern.xml") -> tuple[str, str]:
+        outpath, invoice_n = self._konw_invoice(patt=patt)
         # odczytaj skonwertowany plik
         with open(outpath, "r") as f:
             invoice = f.read()
         self.assertIn(T.NIP, invoice)
         self.assertIn(T.NIP_NABYWCA, invoice)
-        return invoice
+        return invoice, invoice_n
 
-    def _wyslij_ksef_K(self, K: KSEFSDK, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
-        K.start_session()
-        status = K.send_invoice(invoice=invoice)
-        print(status)
-        if action is not None:
-            action()
-        K.close_session()
-        return status
-
-    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
-        return self._wyslij_ksef_K(self.ksef, invoice, action)
+    def _wez_fakture(self, ksef_number, invoice_n):
+        for i in range(1, 5):
+            print(f"Próba pobrania faktury z KSeF, numer próby: {ksef_number}")
+            try:
+                invoice_ksef = self.ksef.get_invoice(ksef_number=ksef_number)
+                print(invoice_ksef)
+                _ = et.fromstring(invoice_ksef)
+                self.assertIn(invoice_n, invoice_ksef)
+                return
+            except Exception as e:
+                print(f"{i} Błąd pobrania faktury: {e}")
+                sleep(2*i)
+        raise ValueError("Nie można pobrac faktury")
 
     # ---------------------
     # test fixture
@@ -55,6 +68,25 @@ class TestKsef(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.ksef.session_terminate()
+
+
+class TestKsefOnLine(TestKsefMixim):
+
+    # ---------------------
+    # helpers
+    # ---------------------
+
+    def _wyslij_ksef_K(self, K: KSEFSDK, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        K.start_session()
+        status = K.send_invoice(invoice=invoice)
+        print(status)
+        if action is not None:
+            action()
+        K.close_session()
+        return status
+
+    def _wyslij_ksef(self, invoice: str, action: Callable | None = None) -> tuple[bool, str, str]:
+        return self._wyslij_ksef_K(self.ksef, invoice, action)
 
     # -------------------
     # test suite
@@ -83,7 +115,7 @@ class TestKsef(unittest.TestCase):
         self._prepare_invoice()
 
     def test_wyslij_do_ksef(self):
-        invoice = self._prepare_invoice()
+        invoice, _ = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice)
         print(status)
         ok, description, numerksef = status
@@ -100,7 +132,7 @@ class TestKsef(unittest.TestCase):
             # wyrzuci błąd, jeśli nie jest poprawny xml
             _ = et.fromstring(upo)
 
-        invoice = self._prepare_invoice()
+        invoice, _ = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice, action=wez_upo)
         ok, description, numerksef = status
         self.assertTrue(ok)
@@ -121,24 +153,14 @@ class TestKsef(unittest.TestCase):
         self.assertIn("nie została znaleziona", str(context.exception))
 
     def test_pobierz_istniejaca_fakture(self):
-        invoice = self._prepare_invoice()
+        invoice, invoice_n = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice)
         ok, _, numerksef = status
         self.assertTrue(ok)
-        for i in range(1, 5):
-            print(f"Próba pobrania faktury z KSeF, numer próby: {numerksef}")
-            try:
-                invoice_ksef = self.ksef.get_invoice(ksef_number=numerksef)
-                print(invoice_ksef)
-                _ = et.fromstring(invoice_ksef)
-                self.assertIn("<KSeFNumber>", invoice_ksef)
-                return
-            except Exception as e:
-                print(f"{i} Błąd pobrania faktury: {e}")
-                sleep(2*i)
+        self._wez_fakture(ksef_number=numerksef, invoice_n=invoice_n)
 
     def test_wyslij_fakture_blad_zalacznik(self):
-        invoice = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        invoice, _ = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
         print(invoice)
         status = self._wyslij_ksef(invoice=invoice)
         print(status)
@@ -149,7 +171,7 @@ class TestKsef(unittest.TestCase):
 
     def test_wyslij_fakture_zakupowa_i_pobierz_metadane(self):
         K = T.KSNABYWCA()
-        invoice = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP_8)
+        invoice, _ = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP_8)
         status = self._wyslij_ksef_K(K, invoice=invoice)
         K.session_terminate()
         print(status)
@@ -178,3 +200,127 @@ class TestKsef(unittest.TestCase):
     def test_niepoprawny_nip(self):
         self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
             KSEFSDK.DEVKSEF, nip="9999999999", token="xxxxxx yyyyyy"))
+
+
+class TestKsefBatch(TestKsefMixim):
+
+    # -----------
+    # helper
+    # -----------
+
+    @staticmethod
+    def _zip_b(b: str, b1: Optional[str] = None):
+        fileobj = io.BytesIO()
+
+        with tempfile.NamedTemporaryFile(mode="w") as t, io.BytesIO() as fileobj:
+            with zipfile.ZipFile(fileobj, 'w') as zip:
+                zip.writestr("name.zip", b)
+                if b1 is not None:
+                    zip.writestr("name1.zip", b1)
+
+            zzip = fileobj.getvalue()
+            return zzip
+
+    def _wyslij_batch(self, payload: list[bytes]):
+
+        def _wez_upo(i, upo_xml):
+            print(i, upo_xml)
+            _ = et.fromstring(upo_xml)
+        res = self.ksef.send_batch_session_bytes(
+            payload=(b for b in payload), wez_upo=_wez_upo)
+        return res
+
+    # -------------
+    # test cases
+    # -------------
+
+    def test_zla_kompresja(self):
+        b = b'111111111'
+        ok, msg, _ = self._wyslij_batch(payload=[b])
+        self.assertFalse(ok)
+        print(msg)
+        self.assertIn("Błąd dekompresji", msg)
+
+    def test_błędna_faktura(self):
+        b = '111111111'
+        zzip = self._zip_b(b)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        self.assertFalse(ok)
+        print(msg)
+        # kompresja jest teraz poprawna
+        self.assertIn('brak poprawnych', msg)
+        print(invoices)
+        self.assertEqual(1, len(invoices))
+        i = invoices[0]
+        self.assertFalse(i.ok)
+        self.assertIn('Nieprawidłowy XML', i.msg)
+
+    def test_proba_wyslania(self):
+        invoice, _ = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        zzip = self._zip_b(invoice)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        self.assertFalse(ok)
+        print(msg)
+        self.assertIn('brak poprawnych', msg)
+        print(invoices)
+        i = invoices[0]
+        self.assertFalse(i.ok)
+        self.assertIn('nie może być późniejsza niż data', i.msg)
+
+    def test_wyslij_fakture_sprzedazy(self):
+        invoice, invoice_n = self._prepare_invoice()
+        zzip = self._zip_b(invoice)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        print(ok, msg, invoices)
+        self.assertEqual(1, len(invoices))
+        i = invoices[0]
+        self.assertTrue(i.ok)
+        self.assertIn('Sukces', i.msg)
+        self.assertIsNotNone(i.ksefNumber)
+        self.assertEqual(invoice_n, i.invoiceNumber)
+        return i
+
+    def test_wyslij_fakture_sprzedazy_wez_upo(self):
+        i = self.test_wyslij_fakture_sprzedazy()
+        referenceNumber = i.referenceNumber
+        upo = self.ksef.pobierz_upo(invoicereferencenumber=referenceNumber)
+        print(upo)
+        # sprawdz xml
+        _ = et.fromstring(upo)
+        # wez fakture
+        ksef_number = i.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=i.invoiceNumber)
+
+    def test_wyslij_dwie_faktury(self):
+        invoice, invoice_n = self._prepare_invoice()
+        invoice1, invoice_n1 = self._prepare_invoice()
+        zzip = self._zip_b(b=invoice, b1=invoice1)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        self.assertTrue(ok)
+        print(ok, msg, invoices)
+        self.assertEqual(2, len(invoices))
+        i0 = invoices[0]
+        i1 = invoices[1]
+        # pierwsza faktura
+        ksef_number = i0.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
+        # druga faktura
+        ksef_number = i1.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n1)
+
+    def test_wyslij_fakture_poprawna_i_niepoprawna(self):
+        invoice, invoice_n = self._prepare_invoice()
+        invoice_zla, _ = self._prepare_invoice(patt=T.PRZYKLAD_ZAKUP)
+        zzip = self._zip_b(b=invoice, b1=invoice_zla)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        print(ok, msg, invoices)
+        # powinno być ok, awet jesli faktura błędna
+        self.assertTrue(ok)
+        # pierwsza faktura poprawna
+        self.assertEqual(2, len(invoices))
+        i0 = invoices[0]
+        i1 = invoices[1]
+        ksef_number = i0.ksefNumber
+        self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
+        # druga niepoprawna
+        self.assertFalse(i1.ok)
