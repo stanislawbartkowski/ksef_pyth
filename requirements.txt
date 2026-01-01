@@ -1,4 +1,8 @@
 requests
 cryptography
 python-dateutil
+endesive
+lxml
+signxml
+asn1crypto
 git+https://github.com/stanislawbartkowski/xml_konwerter.git

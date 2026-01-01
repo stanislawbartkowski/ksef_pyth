@@ -1,7 +1,11 @@
 import datetime
 import os
-from ksef import KSEFSDK
 import logging
+
+from ksef import KSEFSDK
+
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.serialization import pkcs12
 
 TOKEN = "20251116-EC-0317C65000-2CA83C40D9-73|nip-7497725064|80be6cfced7f44eb860aeeb644e8cffdd59bbad9e218415296db90a39e6e5370"
 NIP = "7497725064"
@@ -14,6 +18,15 @@ PRZYKLAD_ZAKUP = "FA_3_Przykład_zakup_25.xml"
 PRZYKLAD_ZAKUP_8 = "FA_3_Przykład_zakup_8.xml"
 
 
+def _load_pfx(file_path, password):
+    with open(file_path, 'rb') as fp:
+        return pkcs12.load_key_and_certificates(
+            fp.read(),
+            password.encode("utf8"),
+            backends.default_backend()
+        )
+
+
 def def_logger():
     logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(message)s")
 
@@ -21,6 +34,7 @@ def def_logger():
 def testdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "testdata")
     return os.path.join(dir, filexml)
+
 
 def workdatadir(filexml: str) -> str:
     dir = os.path.join(os.path.dirname(__file__), "worktemp")
@@ -38,12 +52,32 @@ def KSNABYWCA():
     K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=NIP_NABYWCA, token=TOKEN_MABYWCA)
     return K
 
+def _toiso(date: datetime.date) -> str:
+    return date.strftime("%Y-%m-%d")
 
 def today():
-    return datetime.datetime.now().strftime("%Y-%m-%d")
+    return _toiso(datetime.datetime.now())
 
 
 def gen_numer_faktry():
     nr = "FV"
     data_f = datetime.datetime.now().isoformat()
     return nr + data_f
+
+
+def read_cert() -> tuple[bytes, bytes]:
+    K = 'keyStore.p12'
+    p12 = testdatadir(K)
+    p12pk, p12pc, _ = _load_pfx(p12, password='1234')
+    return p12pk, p12pc
+
+
+def KS_CERT():
+    p12pk, p12pc = read_cert()
+    K = KSEFSDK.initsdkcert(KSEFSDK.DEVKSEF, nip=NIP, p12pk=p12pk, p12pc=p12pc)
+    return K
+
+def daj_przedzial_dat() -> tuple[str,str]:
+    d2 = datetime.datetime.now() + datetime.timedelta(days=2)
+    d1 = d2 - datetime.timedelta(days=7)
+    return _toiso(d1),_toiso(d2)
