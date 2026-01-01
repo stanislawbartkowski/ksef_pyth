@@ -122,11 +122,21 @@ def test8():
     print(res)
     K.session_terminate()
 
+
 def test9():
     K = KS()
     b = b'111111111'
     K.send_batch_session_bytes(payload=[b])
     K.session_terminate()
+
+
+def test10():
+    K = T.KS_CERT()
+    res = K.get_invoices_zakupowe_metadata(
+        date_from="2025-12-21", date_to="2025-12-31")
+    print(res)
+    K.session_terminate()
+
 
 if __name__ == "__main__":
     # test2()
@@ -136,5 +146,6 @@ if __name__ == "__main__":
     # test5()
     # test6()
     # test7()
-    #test8()
-    test9()
+    # test8()
+    # test9()
+    test10()

@@ -7,13 +7,14 @@ from collections import namedtuple
 from collections.abc import Iterator
 import tempfile
 
-import requests
-
+from .httphook import HOOKHTTP
 from .encrypt import (
-    encrypt_token, get_key_and_iv,
+    get_key_and_iv,
     encrypt_symmetric_key, to_base64,
     encrypt_invoice, calculate_hash, encrypt_padding
 )
+
+from .authksef import ABSTRACTTOKEN, AUTHTOKEN, AUTHCERT
 
 
 def _getlogger():
@@ -28,7 +29,7 @@ def _l(info: str):
     _logger.info(info)
 
 
-class KSEFSDK:
+class KSEFSDK(HOOKHTTP):
 
     INVOICES = namedtuple(typename='invoices_ksef', field_names=[
                           'ok', 'ordinalNumer', 'msg', 'invoiceNumber', 'ksefNumber', 'referenceNumber'])
@@ -37,113 +38,48 @@ class KSEFSDK:
     PREKSEF = 1
     PRODKSEF = 2
 
-    _METHODPOST = 0
-    _METHODDEL = 1
-    _METHODGET = 2
-
-    _NOBEARER = 0
-    _BEARERTOKEN = 1
-    _BEARERACCESS = 2
-
     _env_dict = {
         DEVKSEF: 'https://api-test.ksef.mf.gov.pl',
         PREKSEF: 'https://api-demo.ksef.mf.gov.pl',
         PRODKSEF: 'https://api.ksef.mf.gov.pl'
     }
 
-    @classmethod
-    def initsdk(cls, env: int, nip: str, token: str):
+    @staticmethod
+    def _verify_environment(env: int):
         if env not in KSEFSDK._env_dict:
             raise ValueError(
                 'Niepoprawne środowisko, parametr env musi mieć wartość DEVKSEF, PREKSEF lub PRODKSEF')
-        return cls(url=KSEFSDK._env_dict[env], nip=nip, token=token)
+
+    @classmethod
+    def initsdk(cls, env: int, nip: str, token: str):
+        KSEFSDK._verify_environment(env)
+        A = AUTHTOKEN(token=token)
+        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A)
+
+    @classmethod
+    def initsdkcert(cls, env: int, nip: str, p12pk: bytes, p12pc: bytes):
+        KSEFSDK._verify_environment(env)
+        A = AUTHCERT(p12pk=p12pk, p12pc=p12pc)
+        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A)
 
     _SESSIONRATELIMITER = 5
     _INVOICERATELIMITER = 10
     _RATEDELAYTIME = 2
 
-    _RETRY_AFTER = 'Retry-After'
-
-    def __init__(self, url: str, nip: str, token: str):
-        self._base_url = url
-        self._nip = nip
-        self._token = token
-        self._challenge, self._timestamp = self._get_challengeandtimestamp()
-        self._kseftoken_certificate, self._symmetrickey_certificate = self._get_public_certificate()
-        self._encrypted_token = encrypt_token(
-            kseftoken=self._token,
-            timestamp=self._timestamp,
-            public_certificate=self._kseftoken_certificate
-        )
-        self._referencenumber, self._authenticationtoken = self._auth_ksef_token()
+    def __init__(self, url: str, nip: str, A: ABSTRACTTOKEN):
+        super(KSEFSDK, self).__init__(base_url=url)
+        challenge, timestamp = self._get_challengeandtimestamp()
+        kseftoken_certificate, self._symmetrickey_certificate = self._get_public_certificate()
+        A.set_params(timestamp=timestamp,
+                     kseftoken_certificate=kseftoken_certificate)
+        self._referencenumber, self._authenticationtoken = A.auth_ksef(
+            H=self, nip=nip, challenge=challenge)
         self._session_status()
         self._access_token, self._refresh_token = self._redeem_token()
         self._symmetric_key, self._iv = get_key_and_iv()
         self._sessionreferencenumber = ''
         self._sessioninvoicereferencenumber = ''
         self._invoicereferencenumber = ''
-
-    def _construct_url(self, endpoint: str) -> str:
-        return f'{self._base_url}/v2/{endpoint}'
-
-    def _hook_response(self,
-                       endpoint: str,
-                       method: int = _METHODPOST,
-                       body: Optional[dict] = None,
-                       bearer: int = _BEARERACCESS,
-
-                       requestmethod: Optional[str] = None,
-                       data: Optional[bytes] = None,
-                       requestheaders: Optional[dict] = None) -> requests.Response:
-
-        if bearer != self._NOBEARER:
-            headers = {
-                'Authorization': f'Bearer {self._access_token if bearer == self._BEARERACCESS else self._authenticationtoken}'
-            }
-        else:
-            headers = {}
-
-        url = self._construct_url(
-            endpoint=endpoint) if requestmethod is None else endpoint
-        _l(url)
-        no_request = 0
-        while True:
-            if requestmethod is not None:
-                response = requests.request(
-                    url=url, data=data, method=requestmethod, headers=requestheaders)
-            else:
-                if method == self._METHODDEL:
-                    response = requests.delete(url, headers=headers)
-                elif method == self._METHODPOST:
-                    response = requests.post(
-                        url, json=body or {}, headers=headers)
-                else:
-                    response = requests.get(url, headers=headers)
-
-            if response.status_code == 400:
-                exce = response.json()['exception']['exceptionDetailList'][0]
-                details = exce['details']
-                errmsg = ' '.join(details)
-                _logger.error(errmsg)
-                raise ValueError(errmsg)
-
-            if response.status_code == 429 and self._RETRY_AFTER in response.json():
-                no_of_sec = response.json()[self._RETRY_AFTER]
-                no_request += 1
-                mess = f'Code: {response.status_code}, próba {no_request},  Czekam {no_of_sec} przed ponowną próbą'
-                _l(mess)
-                sleep(no_of_sec)
-            else:
-                break
-
-        response.raise_for_status()
-        return response
-
-    def _hook(self, endpoint: str, method: int = _METHODPOST, body: dict | None = None, bearer: int = _BEARERACCESS) -> dict:
-
-        response = self._hook_response(
-            endpoint=endpoint, method=method, body=body, bearer=bearer)
-        return response.json() if response.status_code != 204 else {}
 
     def _get_challengeandtimestamp(self) -> tuple[str, str]:
         response = self._hook('auth/challenge', bearer=self._NOBEARER)
@@ -157,22 +93,6 @@ class KSEFSDK:
         symmetrickey_certificate = next(
             e['certificate'] for e in response if 'SymmetricKeyEncryption' in e['usage'])
         return kseftoken_certificate, symmetrickey_certificate
-
-    def _auth_ksef_token(self) -> tuple[str, str]:
-        context = {
-            'type:': 'Nip',
-            'value': self._nip
-        }
-        body = {
-            'contextIdentifier': context,
-            'challenge': self._challenge,
-            'encryptedToken': self._encrypted_token
-        }
-        response = self._hook(
-            'auth/ksef-token', body=body, bearer=self._NOBEARER)
-        referenceNumber = response['referenceNumber']
-        token = response['authenticationToken']['token']
-        return referenceNumber, token
 
     def _session_status(self) -> None:
         url = f'auth/{self._referencenumber}'
