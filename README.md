@@ -3,6 +3,7 @@ Zaimplementowany jest tutaj prosty moduł w Python 3 umożliwiający wysyłkę f
 
 Zaimplementowane są następujące funkcjonalności:
 * Inicjalizacja, autentykacja za pomocą token i rozpoczęcie sesji uwierzytelnienia
+* Inicjalizacja, autentykacja z wykorzystaniem podpisu XAdES
 * Otworzenie sesji interaktywnej
 * Wysłanie faktury
 * Pobranie UPO
@@ -37,13 +38,19 @@ https://github.com/kzawISPL
 
 # Testowanie
 
-W unit testach jest zawarty fikcyjny NIP oraz testowy token. Można wykorzystać ten token lub utworzyć własny. W wersji testowej nie ma gwarancji bezpieczeństwa danych, powinny być używane wyłącznie dane fikcyjne lub zanonimizowane.
+W unit testach jest zawarty fikcyjny NIP oraz testowy token. Można wykorzystać ten token lub utworzyć własny. W wersji testowej nie ma gwarancji bezpieczeństwa danych, powinny być używane wyłącznie dane fikcyjne lub zanonimizowane. Do autentykacji podpise XAdES były wykorzystywane tylko testowe certyfikaty generowane poprzez testowe środowisko KSeF 2.0
 
 # Utworzenie testowego tokena
 
 https://web2te-ksef.mf.gov.pl/web/
 
 Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zakładce "Tokeny" utworzyć token ze wszystkimi uprawnieniami.
+
+# Testowe certyfikaty
+
+https://web2te-ksef.mf.gov.pl/web/login
+
+Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zakładce "Wnioskuj o certyfikat" pobrać klucz (należy zapamiętać wprowadzone hasło) i następnie w zakładace "Lista certyfikatów" pobrać utworzony certyfikat.
 
 # Struktura kodu
 
@@ -58,7 +65,8 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | -- | -- | -- | -- |
 | Inicjalizacja uwierzytelnienia | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1challenge/post) | /api/v2/auth/challenge | Konstruktor KSEFSDK
 | Pobranie certyfikatów | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Certyfikaty-klucza-publicznego/paths/~1api~1v2~1security~1public-key-certificates/get) | api/v2/security/public-key-certificates | Konstruktor
-| Uwierzytelnienie z wykorzystaniem tokena KSeF | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1ksef-token/post) | /api/v2/auth/ksef-token | Konstruktor 
+| Uwierzytelnienie z wykorzystaniem tokena KSeF | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1ksef-token/post) | /api/v2/auth/ksef-token | Konstruktor initsdkcert
+| Uwierzytelnienie z wykorzystaniem podpisu XAdES | [link](https://ksef-demo.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1xades-signature/post) | /api/v2/auth/xades-signature | Konstruktor 
 | Pobranie statusu uwierzytelniania | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1%7BreferenceNumber%7D/get) | /api/v2/auth/{referenceNumber} | Konstruktor
 | Pobranie tokenów dostępowych | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1token~1redeem/post) | /api/v2/auth/token/redeem | Konstruktor
 | Otwarcie sesji interaktywnej | [link](https://ksef-test.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online/post) | /api/v2/sessions/online | start_session
@@ -101,14 +109,14 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueError. 
 
 
-## Inicjalizacja, konstruktor KSEFSDK
+## Inicjalizacja, konstruktor KSEFSDK. autentykacja tokenem KSeF
 
 *KSEFSDK.initsdk(env: int, nip: str, token: str)*
 
 Parametry:
 * env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF. Uwaga: testowane tylko w środowisku KSEFSDK.DEVKSEF
 * nip NIP do uwierzytelnienia
-* token Token KSeF do uwierzytleniania
+* token Token KSeF do uwierzytelnienia
 
 Działanie:
 * Inicjalizacja uwierzytelnienia
@@ -117,7 +125,29 @@ Działanie:
 
 Zwraca:
 
-Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśli wystąpił błąd, to wurzycany jest wyjątek.
+Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśli wystąpił błąd, to wyrzucany jest wyjątek.
+
+## Inicjalizacja, konstruktor KSEFSDK. autentykacja podpisem XAdES
+
+*KSEFSDK.initsdkcert(env: int, nip: str, p12pk: bytes, p12pc: bytes)*
+
+Parametry:
+* env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF. Uwaga: testowane tylko w środowisku KSEFSDK.DEVKSEF
+* nip NIP do uwierzytelnienia
+* p12pk Odczytany klucz prywatny
+* p12pc Odczytany certyfikat
+
+Działanie:
+* Inicjalizacja uwierzytelnienia
+* Pobranie publicznych certyfikatów z kluczem do szyfrowania
+* Autentykacja podpisem XAdES z użyciem wprowadzonych certyfikatów
+
+UWAGA:
+Klucz i certyfikat do podpisu XAdES musi być odczytany zewnętrznie. 
+
+Zwraca:
+
+Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśli wystąpił błąd, to wyrzucany jest wyjątek.
 
 ## Otworzenie sesji interaktywnej
 
