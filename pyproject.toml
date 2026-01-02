@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 "ksef" = "ksef"
 
 [tool.setuptools.package-data]
+"*" = ["*.xml"]
 pattern = ["request.xml"]
 
 [project]
