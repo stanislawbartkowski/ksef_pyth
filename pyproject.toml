@@ -5,6 +5,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.package-dir]
 "ksef" = "ksef"
 
+[tool.setuptools.package-data]
+pattern = ["request.xml"]
+
 [project]
 name = "ksef2.0_python"
 version = "0.0.1"
