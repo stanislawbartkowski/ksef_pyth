@@ -38,7 +38,7 @@ https://github.com/kzawISPL
 
 # Testowanie
 
-W unit testach jest zawarty fikcyjny NIP oraz testowy token. Można wykorzystać ten token lub utworzyć własny. W wersji testowej nie ma gwarancji bezpieczeństwa danych, powinny być używane wyłącznie dane fikcyjne lub zanonimizowane. Do autentykacji podpise XAdES były wykorzystywane tylko testowe certyfikaty generowane poprzez testowe środowisko KSeF 2.0
+W unit testach jest zawarty fikcyjny NIP oraz testowy token. Można wykorzystać ten token lub utworzyć własny. W wersji testowej nie ma gwarancji bezpieczeństwa danych, powinny być używane wyłącznie dane fikcyjne lub zanonimizowane. Do testowania autentykacji podpisem XAdES były wykorzystywane tylko testowe certyfikaty generowane poprzez testowe środowisko KSeF 2.0
 
 # Utworzenie testowego tokena
 
