@@ -50,13 +50,18 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 
 https://web2te-ksef.mf.gov.pl/web/login
 
-Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zakładce "Wnioskuj o certyfikat" pobrać klucz (należy zapamiętać wprowadzone hasło) i następnie w zakładace "Lista certyfikatów" pobrać utworzony certyfikat.
+Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zakładce "Wnioskuj o certyfikat" pobrać klucz (należy zapamiętać wprowadzone hasło) i następnie w zakładce "Lista certyfikatów" pobrać utworzony certyfikat.
 
 # Struktura kodu
 
 * ksef/sdk
   * encrypt.py Pomocniczy moduł do szyfrowania i deszyfrowania danych. Wykorzystywany wewnętrznie przez ksefsdk.py
   * ksefsdk.py Główny moduł zawierający klasę KSEFSDK z funkcjonalnymi metodami. Klasa KSEFSDK jest jedynym obiektem dostępnym zewnętrznie.
+  * httphook.py Pomocniczy moduł, rozszerzenie requests
+  * authksef.py Pomocniczy moduł, dwa warianty autentykacji
+  * xades_sign.py Pomocniczy moduł, podpis XAdES (contrib: https://github.com/m32/ksef/blob/v2.0/t-03-auth-02-sign.py)
+* ksef/pattern/requests.xml
+  * Wykorzstywany wewnętrznie, wzorzec do utworzenia AuthTokenRequest
 * tests Testy unitowe
 
 # Zaimplementowane funkcjonalności
@@ -88,7 +93,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 Jest to moduł napisany w Python 3. Scenariusze użycia
 
 ### Wysłanie fakturt do KSef i pobranie UPO
-* Utworzenie klasy KSEFSDK
+* Utworzenie klasy KSEFSDK, autentykacja token lub XAdSE
 * Rozpoczęcie sesji interaktywnej (metoda open_session)
 * Wysłanie jednej lub więcej faktur oraz odczytanie wygenerowanego numeru KSeF (send_invoice)
 * (Opcjonalnie) Odczytanie UPO (pobierz_upo)
@@ -96,12 +101,12 @@ Jest to moduł napisany w Python 3. Scenariusze użycia
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
 
 ### Odczytanie faktury na podstawie numeru KSeF
-* Utworzenie klasy KSEFSDK
+* Utworzenie klasy KSEFSDK, autentykacja token lub XAdSE
 * Odczytanie faktury w formacie XML (get_ivoice)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
 
 ### Odczytanie nagłówków faktur zakupowych
-* Utworzenie klasy KSEFSDK
+* Utworzenie klasy KSEFSDK, autentykacja token lub XAdSE
 * Pobranie nagłówków (metadata) faktur zakupowych na podstawie daty faktury (get_invoices_zakupowe_metadata)
 * (Opcjonalnie) Odczytanie treści faktury na podstawie numer KSeF (get_invoice)
 * Zamknięcie sesji uwierzytelnienia (terminate_session)
@@ -127,7 +132,7 @@ Zwraca:
 
 Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśli wystąpił błąd, to wyrzucany jest wyjątek.
 
-## Inicjalizacja, konstruktor KSEFSDK. autentykacja podpisem XAdES
+## Inicjalizacja, konstruktor KSEFSDK, autentykacja podpisem XAdES
 
 *KSEFSDK.initsdkcert(env: int, nip: str, p12pk: bytes, p12pc: bytes)*
 
