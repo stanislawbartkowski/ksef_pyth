@@ -42,7 +42,7 @@ class AUTHTOKEN(ABSTRACTTOKEN):
             'challenge': challenge,
             'encryptedToken': encrypted_token
         }
-        response = H._hook(
+        response = H.hook(
             'auth/ksef-token', body=body, bearer=H._NOBEARER)
         referenceNumber = response['referenceNumber']
         token = response['authenticationToken']['token']
@@ -77,7 +77,7 @@ class AUTHCERT(ABSTRACTTOKEN):
         xades_xml = sign_xades(
             auth_xml=xml_aut, p12pk=self._p12pk, p12pc=self._p12pc)
         end_point = 'auth/xades-signature'
-        response = H._hook_response(
+        response = H.hook_response(
             endpoint=end_point, bearer=H._NOBEARER, xml_data=xades_xml)
         result = response.json()
         referenceNumber = result['referenceNumber']

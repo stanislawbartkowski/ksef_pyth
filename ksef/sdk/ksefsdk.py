@@ -75,18 +75,19 @@ class KSEFSDK(HOOKHTTP):
         self._referencenumber, self._authenticationtoken = A.auth_ksef(
             H=self, nip=nip, challenge=challenge)
         self._session_status()
-        self._access_token, self._refresh_token = self._redeem_token()
+        o_tokens = self._redeem_token()
+        self.set_tokes(*o_tokens)
         self._symmetric_key, self._iv = get_key_and_iv()
         self._sessionreferencenumber = ''
         self._sessioninvoicereferencenumber = ''
         self._invoicereferencenumber = ''
 
     def _get_challengeandtimestamp(self) -> tuple[str, str]:
-        response = self._hook('auth/challenge', bearer=self._NOBEARER)
+        response = self.hook('auth/challenge', bearer=self._NOBEARER)
         return response['challenge'], response['timestamp']
 
     def _get_public_certificate(self) -> tuple[str, str]:
-        response = self._hook(
+        response = self.hook(
             'security/public-key-certificates', method=self._METHODGET, bearer=self._NOBEARER)
         kseftoken_certificate = next(
             e['certificate'] for e in response if 'KsefTokenEncryption' in e['usage'])
@@ -98,7 +99,7 @@ class KSEFSDK(HOOKHTTP):
         url = f'auth/{self._referencenumber}'
         sleep_time = self._RATEDELAYTIME
         for _ in range(self._SESSIONRATELIMITER):
-            response = self._hook(
+            response = self.hook(
                 url, method=self._METHODGET, bearer=self._BEARERTOKEN)
             status = response['status']['code']
             description = response['status']['description']
@@ -115,7 +116,7 @@ class KSEFSDK(HOOKHTTP):
         raise TimeoutError('Session activation timed out.')
 
     def _redeem_token(self) -> tuple[str, str]:
-        response = self._hook(endpoint='auth/token/redeem',
+        response = self.hook(endpoint='auth/token/redeem',
                               bearer=self._BEARERTOKEN)
         access_token = response['accessToken']['token']
         refresh_token = response['refreshToken']['token']
@@ -123,11 +124,11 @@ class KSEFSDK(HOOKHTTP):
 
     def session_terminate(self) -> None:
         url = f'auth/sessions/{self._referencenumber}'
-        self._hook(url, method=self._METHODDEL)
+        self.hook(url, method=self._METHODDEL)
 
     def close_session(self) -> None:
         url = f'sessions/online/{self._sessionreferencenumber}/close'
-        self._hook(url)
+        self.hook(url)
 
     def _prepare_session_data(self) -> dict:
         encrypted_symmetric_key = encrypt_symmetric_key(
@@ -149,7 +150,7 @@ class KSEFSDK(HOOKHTTP):
 
     def start_session(self) -> None:
         request_data = self._prepare_session_data()
-        response = self._hook(endpoint='sessions/online', body=request_data)
+        response = self.hook(endpoint='sessions/online', body=request_data)
         self._sessionreferencenumber = response['referenceNumber']
 
     @staticmethod
@@ -166,7 +167,7 @@ class KSEFSDK(HOOKHTTP):
         end_point = end_point or f'sessions/{self._sessionreferencenumber}/invoices/{self._sessioninvoicereferencenumber}'
         sleep_time = self._RATEDELAYTIME
         for no in range(self._INVOICERATELIMITER):
-            response = self._hook(endpoint=end_point, method=self._METHODGET)
+            response = self.hook(endpoint=end_point, method=self._METHODGET)
             code = response['status']['code']
             # stworz komunikat
             description = self._daj_description(response['status'])
@@ -201,20 +202,20 @@ class KSEFSDK(HOOKHTTP):
             'offlineMode': False,
         }
         end_point = f'sessions/online/{self._sessionreferencenumber}/invoices'
-        response = self._hook(endpoint=end_point, body=request_data)
+        response = self.hook(endpoint=end_point, body=request_data)
         self._sessioninvoicereferencenumber = response['referenceNumber']
         return self._invoice_status()
 
     def pobierz_upo(self, invoicereferencenumber: Optional[str] = None) -> str:
         invoicereferencenumber = invoicereferencenumber or self._invoicereferencenumber
         end_point = f'sessions/{self._sessionreferencenumber}/invoices/{invoicereferencenumber}/upo'
-        response = self._hook_response(
+        response = self.hook_response(
             endpoint=end_point, method=self._METHODGET)
         return response.text
 
     def get_invoice(self, ksef_number: str) -> str:
         end_point = f'invoices/ksef/{ksef_number}'
-        response = self._hook_response(
+        response = self.hook_response(
             endpoint=end_point, method=self._METHODGET)
         return response.text
 
@@ -228,7 +229,7 @@ class KSEFSDK(HOOKHTTP):
                 'to': date_to
             }
         }
-        response = self._hook(endpoint=end_point, body=query)
+        response = self.hook(endpoint=end_point, body=query)
         hasMore = response['hasMore']
         if hasMore:
             raise ValueError(
@@ -269,7 +270,7 @@ class KSEFSDK(HOOKHTTP):
             }
         })
         end_point = 'sessions/batch'
-        response = self._hook(endpoint=end_point, body=request_data)
+        response = self.hook(endpoint=end_point, body=request_data)
         self._sessionreferencenumber = response['referenceNumber']
         partUpload = response['partUploadRequests']
         # druga faza, wysyłka kolejnych części
@@ -286,18 +287,18 @@ class KSEFSDK(HOOKHTTP):
             headers = p['headers']
             msg = f'Wysyłka części numer {number}'
             _l(msg)
-            self._hook_response(
+            self.hook_response(
                 endpoint=url, data=encrypted_data, requestmethod=method, requestheaders=headers)
         # zamknięcie
         end_point = f'sessions/batch/{self._sessionreferencenumber}/close'
-        response = self._hook(endpoint=end_point)
+        response = self.hook(endpoint=end_point)
         # teraz czekanie na zakończenie przetwarzania
         end_point = f'sessions/{self._sessionreferencenumber}'
         ok_session, msg, _ = self._invoice_status(end_point=end_point)
 
         # sprawdz faktury i przygotuj wynik
         end_point = f'/sessions/{self._sessionreferencenumber}/invoices'
-        response = self._hook(endpoint=end_point, method=self._METHODGET)
+        response = self.hook(endpoint=end_point, method=self._METHODGET)
         res_invoices = []
         invoices = response['invoices']
         for i in invoices:
@@ -317,7 +318,7 @@ class KSEFSDK(HOOKHTTP):
             res_invoices.append(i)
             # pobierz UPO
             if wez_upo is not None and upo is not None:
-                response = self._hook_response(
+                response = self.hook_response(
                     endpoint=upo, requestmethod='GET')
                 xml_upo = response.text
                 wez_upo(i, xml_upo)

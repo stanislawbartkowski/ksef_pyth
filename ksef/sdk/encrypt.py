@@ -13,7 +13,7 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes, base
 
 
-def encode(s: str) -> bytes:
+def _encode(s: str) -> bytes:
     return s.encode('utf-8')
 
 
@@ -24,7 +24,7 @@ def to_base64(b: bytes) -> str:
 def _public_key(public_certificate: str):
     crt = f'-----BEGIN CERTIFICATE-----\n{public_certificate}\n-----END CERTIFICATE-----'
 
-    certificate = x509.load_pem_x509_certificate(encode(crt))
+    certificate = x509.load_pem_x509_certificate(_encode(crt))
     public_key = certificate.public_key()
     return public_key
 
@@ -45,7 +45,7 @@ def _encrypt_public_key(public_certificate: str, to_encrypt: bytes) -> bytes:
 def encrypt_token(kseftoken: str, timestamp: str, public_certificate: str) -> str:
     t = dateutil.parser.isoparse(timestamp)
     t = int((calendar.timegm(t.timetuple()) * 1000) + (t.microsecond / 1000))
-    token_bytes = encode(f'{kseftoken}|{t}')
+    token_bytes = _encode(f'{kseftoken}|{t}')
     encrypted = _encrypt_public_key(
         public_certificate=public_certificate, to_encrypt=token_bytes)
     return to_base64(encrypted)
@@ -80,7 +80,7 @@ def _daj_cipher_encryptor(symmetric_key: bytes, iv: bytes) -> base.CipherContext
 
 
 def encrypt_invoice(symmetric_key: bytes, iv: bytes, invoice: str) -> tuple[int, bytes]:
-    invoice_bytes = encode(invoice)
+    invoice_bytes = _encode(invoice)
     encryptor = _daj_cipher_encryptor(symmetric_key=symmetric_key, iv=iv)
     padded_invoice = _pad(invoice_bytes)
     encrypted_invoice = encryptor.update(padded_invoice) + encryptor.finalize()
@@ -89,8 +89,8 @@ def encrypt_invoice(symmetric_key: bytes, iv: bytes, invoice: str) -> tuple[int,
 
 def calculate_hash(data: bytes | str) -> str:
     if isinstance(data, str):
-        data = encode(data)
-    return base64.b64encode(hashlib.sha256(data).digest()).decode()
+        data = _encode(data)
+    return to_base64(hashlib.sha256(data).digest())
 
 
 def encrypt_padding(symmetric_key: bytes, iv: bytes, b: bytes) -> bytes:

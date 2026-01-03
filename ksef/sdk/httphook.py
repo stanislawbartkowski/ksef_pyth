@@ -31,38 +31,26 @@ class HOOKHTTP:
 
     def __init__(self, base_url: str):
         self._base_url = base_url
-        self._kaccess_token: str = ''
-        self._kauthenticationtoken: str = ''
+        self._access_token: str = ''
+        self._authenticationtoken: str = ''
 
-    @property
-    def _access_token(self):
-        return self._kaccess_token
-
-    @_access_token.setter
-    def _access_token(self, token: str):
-        self._kaccess_token = token
-
-    @property
-    def _authenticationtoken(self):
-        return self._kauthenticationtoken
-
-    @_authenticationtoken.setter
-    def _authenticationtoken(self, authenticationtoken: str):
-        self._kauthenticationtoken = authenticationtoken
+    def set_tokes(self, access_token: str, authentication_token: str):
+        self._access_token = access_token
+        self._authenticationtoken = authentication_token
 
     def _construct_url(self, endpoint: str) -> str:
         return f'{self._base_url}/v2/{endpoint}'
 
-    def _hook_response(self,
-                       endpoint: str,
-                       method: int = _METHODPOST,
-                       body: Optional[dict] = None,
-                       bearer: int = _BEARERACCESS,
-                       xml_data: Optional[bytes] = None,
+    def hook_response(self,
+                      endpoint: str,
+                      method: int = _METHODPOST,
+                      body: Optional[dict] = None,
+                      bearer: int = _BEARERACCESS,
+                      xml_data: Optional[bytes] = None,
 
-                       requestmethod: Optional[str] = None,
-                       data: Optional[bytes] = None,
-                       requestheaders: Optional[dict] = None) -> requests.Response:
+                      requestmethod: Optional[str] = None,
+                      data: Optional[bytes] = None,
+                      requestheaders: Optional[dict] = None) -> requests.Response:
 
         if bearer != self._NOBEARER:
             headers = {
@@ -113,8 +101,8 @@ class HOOKHTTP:
         response.raise_for_status()
         return response
 
-    def _hook(self, endpoint: str, method: int = _METHODPOST, body: dict | None = None, bearer: int = _BEARERACCESS) -> dict:
+    def hook(self, endpoint: str, method: int = _METHODPOST, body: dict | None = None, bearer: int = _BEARERACCESS) -> dict:
 
-        response = self._hook_response(
+        response = self.hook_response(
             endpoint=endpoint, method=method, body=body, bearer=bearer)
         return response.json() if response.status_code != 204 else {}
