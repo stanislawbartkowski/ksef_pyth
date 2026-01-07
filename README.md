@@ -61,7 +61,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
   * authksef.py Pomocniczy moduł, dwa warianty autentykacji
   * xades_sign.py Pomocniczy moduł, podpis XAdES (contrib: https://github.com/m32/ksef/blob/v2.0/t-03-auth-02-sign.py)
 * ksef/pattern/requests.xml
-  * Wykorzstywany wewnętrznie, wzorzec do utworzenia AuthTokenRequest
+  * Wykorzystywany wewnętrznie, wzorzec do utworzenia AuthTokenRequest
 * tests Testy unitowe
 
 # Zaimplementowane funkcjonalności
