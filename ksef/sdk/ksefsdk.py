@@ -38,6 +38,11 @@ class KSEFSDK(HOOKHTTP):
     PREKSEF = 1
     PRODKSEF = 2
 
+    SUBJECT1 = 'Subject1'  # sprzedawca
+    SUBJECT2 = 'Subject2'  # nabywca
+    SUBJECT3 = 'Subject3'  # Podmiot 3
+    SUBJECTAUTHORIZED = "SubjectAuthorized"  # Podmiot upoważniony
+
     _env_dict = {
         DEVKSEF: 'https://api-test.ksef.mf.gov.pl',
         PREKSEF: 'https://api-demo.ksef.mf.gov.pl',
@@ -117,7 +122,7 @@ class KSEFSDK(HOOKHTTP):
 
     def _redeem_token(self) -> tuple[str, str]:
         response = self.hook(endpoint='auth/token/redeem',
-                              bearer=self._BEARERTOKEN)
+                             bearer=self._BEARERTOKEN)
         access_token = response['accessToken']['token']
         refresh_token = response['refreshToken']['token']
         return access_token, refresh_token
@@ -219,10 +224,10 @@ class KSEFSDK(HOOKHTTP):
             endpoint=end_point, method=self._METHODGET)
         return response.text
 
-    def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:
+    def get_invoices_metadata(self, date_from: str, date_to: str, subject: str) -> list[dict]:
         end_point = 'invoices/query/metadata?pageSize=250'
         query = {
-            'subjectType': 'Subject2',
+            'subjectType': subject,
             'dateRange': {
                 'dateType': 'Issue',
                 'from': date_from,
@@ -235,6 +240,9 @@ class KSEFSDK(HOOKHTTP):
             raise ValueError(
                 'Zbyt duża liczba faktur do pobrania (max 250), zawęź zakres dat')
         return response['invoices']
+
+    def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:
+        return self.get_invoices_metadata(date_from, date_to, subject=self.SUBJECT2)
 
     def send_batch_session_bytes(self, payload: Iterator[bytes], wez_upo: Optional[Callable] = None) -> tuple[bool, str, list[INVOICES]]:
 

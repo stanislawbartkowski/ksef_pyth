@@ -1,6 +1,4 @@
-from abc import abstractmethod
-from typing import Callable, Optional
-from time import sleep
+from typing import Optional
 import io
 import tempfile
 
@@ -9,9 +7,7 @@ import zipfile
 
 import xml.etree.ElementTree as et
 
-from ksef.sdk.ksefsdk import KSEFSDK
 
-from konwdokument import KONWDOKUMENT
 import test_mix as T
 from tests.testabstract.testabstract import AbstractTestKsefOnLine, TestKsefMixim
 
@@ -67,6 +63,9 @@ class TestTokenOnLine(TestAuthToken, AbstractTestKsefOnLine):
     def test_wyslij_do_ksef(self):
         self._test_wyslij_do_ksef()
 
+    def test_wyslij_do_ksef_i_pobierz_sprzedazy(self):
+        self._test_wyslij_do_ksef_i_pobierz_sprzedazy()
+
     def test_wyslij_do_ksef_i_wez_upo(self):
         self._test_wyslij_do_ksef_i_wez_upo
 
@@ -111,6 +110,9 @@ class TestCertfOnLine(TestAuthCert, AbstractTestKsefOnLine):
 
     def test_wyslij_do_ksef(self):
         self._test_wyslij_do_ksef()
+
+    def test_wyslij_do_ksef_i_pobierz_sprzedazy(self):
+        self._test_wyslij_do_ksef_i_pobierz_sprzedazy()
 
     def test_wyslij_do_ksef_i_wez_upo(self):
         self._test_wyslij_do_ksef_i_wez_upo
