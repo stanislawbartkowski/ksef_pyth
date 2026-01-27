@@ -61,27 +61,27 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
   * authksef.py Pomocniczy moduł, dwa warianty autentykacji
   * xades_sign.py Pomocniczy moduł, podpis XAdES (contrib: https://github.com/m32/ksef/blob/v2.0/t-03-auth-02-sign.py)
 * ksef/pattern/requests.xml
-  * Wykorzystywany wewnętrznie, wzorzec do utworzenia AuthTokenRequest
+  * Wykorzystywany wewnętrznie, wzorzec do utworzenia AuthTokenRequestń
 * tests Testy unitowe
 
 # Zaimplementowane funkcjonalności
 
 | Funkcjonalność | API link | Endpoint | Metoda w klasie KSEFSDK
 | -- | -- | -- | -- |
-| Inicjalizacja uwierzytelnienia | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1challenge/post) | /api/v2/auth/challenge | Konstruktor KSEFSDK
-| Pobranie certyfikatów | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Certyfikaty-klucza-publicznego/paths/~1api~1v2~1security~1public-key-certificates/get) | api/v2/security/public-key-certificates | Konstruktor
-| Uwierzytelnienie z wykorzystaniem tokena KSeF | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1ksef-token/post) | /api/v2/auth/ksef-token | Konstruktor initsdkcert
+| Inicjalizacja uwierzytelnienia | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1challenge/post) | /api/v2/auth/challenge | Konstruktor KSEFSDK
+| Pobranie certyfikatów | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Certyfikaty-klucza-publicznego/paths/~1security~1public-key-certificates/get) | api/v2/security/public-key-certificates | Konstruktor
+| Uwierzytelnienie z wykorzystaniem tokena KSeF | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1ksef-token/post) | /api/v2/auth/ksef-token | Konstruktor initsdkcert
 | Uwierzytelnienie z wykorzystaniem podpisu XAdES | [link](https://ksef-demo.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1xades-signature/post) | /api/v2/auth/xades-signature | Konstruktor 
-| Pobranie statusu uwierzytelniania | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1%7BreferenceNumber%7D/get) | /api/v2/auth/{referenceNumber} | Konstruktor
-| Pobranie tokenów dostępowych | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1api~1v2~1auth~1token~1redeem/post) | /api/v2/auth/token/redeem | Konstruktor
-| Otwarcie sesji interaktywnej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online/post) | /api/v2/sessions/online | start_session
-| Wysłanie faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1invoices/post) | /api/v2/sessions/online/{referenceNumber}/invoices | send_invoice
-| Pobranie statusu faktury z sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1api~1v2~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D/get) | /v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber} | send_invoice
-| Pobranie UPO faktury z sesji na podstawie numeru referencyjnego faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1api~1v2~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D~1upo/get) | /api/v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber}/upo | pobierz_upo
-| Zamknięcie sesji interaktywnej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1api~1v2~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
-| Unieważnienie sesji uwierzytelnienia | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1api~1v2~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
-| Odczytanie faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
-| Odczytanie nagłówków faktur zakupowych | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1api~1v2~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur zakupowych 
+| Pobranie statusu uwierzytelniania | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1%7BreferenceNumber%7D/get) | /api/v2/auth/{referenceNumber} | Konstruktor
+| Pobranie tokenów dostępowych | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Uzyskiwanie-dostepu/paths/~1auth~1token~1redeem/post) | /api/v2/auth/token/redeem | Konstruktor
+| Otwarcie sesji interaktywnej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1sessions~1online/post) | /api/v2/sessions/online | start_session
+| Wysłanie faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1sessions~1online~1%7BreferenceNumber%7D~1invoices/post) | /api/v2/sessions/online/{referenceNumber}/invoices | send_invoice
+| Pobranie statusu faktury z sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D/get) | /v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber} | send_invoice
+| Pobranie UPO faktury z sesji na podstawie numeru referencyjnego faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices~1%7BinvoiceReferenceNumber%7D~1upo/get) | /api/v2/sessions/{referenceNumber}/invoices/{invoiceReferenceNumber}/upo | pobierz_upo
+| Zamknięcie sesji interaktywnej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
+| Unieważnienie sesji uwierzytelnienia | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
+| Odczytanie faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
+| Odczytanie nagłówków faktur zakupowych | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur zakupowych 
 | Otwarcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post) | /api/v2/sessions/batch | send_batch_session_bytes
 | Zamknięcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch~1%7BreferenceNumber%7D~1close/post) | /api/v2/sessions/batch/{referenceNumber}/close | send_batch_session_bytes
 | Pobranie faktur sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices/get) | /api/v2/sessions/{referenceNumber}/invoices | send_batch_session_bytes
