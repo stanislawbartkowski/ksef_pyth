@@ -81,7 +81,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Zamknięcie sesji interaktywnej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-interaktywna/paths/~1sessions~1online~1%7BreferenceNumber%7D~1close/post) | /api/v2/auth/sessions/{referenceNumber} | close_session 
 | Unieważnienie sesji uwierzytelnienia | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Aktywne-sesje/paths/~1auth~1sessions~1%7BreferenceNumber%7D/delete) | /api/v2/auth/sessions/{referenceNumber} | terminate_session
 | Odczytanie faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1ksef~1%7BksefNumber%7D/get) | /api/v2/invoices/ksef/{ksefNumber} | get_invoice
-| Odczytanie nagłówków faktur zakupowych | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur zakupowych 
+| Odczytanie nagłówków faktur | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1query~1metadata/post) | /api/v2/invoices/query/metadata | Odczytanie faktur (także zakupowych)
 | Otwarcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post) | /api/v2/sessions/batch | send_batch_session_bytes
 | Zamknięcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch~1%7BreferenceNumber%7D~1close/post) | /api/v2/sessions/batch/{referenceNumber}/close | send_batch_session_bytes
 | Pobranie faktur sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices/get) | /api/v2/sessions/{referenceNumber}/invoices | send_batch_session_bytes
@@ -230,12 +230,17 @@ Działanie:
 
 Odczytuje fakturę na podstawie numeru KSeF. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
-## Odczytanie nagłówków faktur zakupowych na podstawie dat
-*get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
+## Odczytanie nagłówków faktur na podstawie dat
+*get_invoices_metadata(self, date_from: str, date_to: str,subject:str) -> list[dict]:*
 
 Parametry:
 * date_from Data w formacie YYYY-MM-DD. Data początkowa zakresu daty wystawienia faktury
 * date_to Data w formacie YYYY-MM-DD. Data końcowa zakresu daty wystawienia faktury
+* subject Rodzaj faktury do odczytania. Możliwe są wartości:
+  * KSEFSDK.SUBJECT1 = 'Subject1'  Faktury sprzedaży
+  * KSEFSDK.SUBJECT2 = 'Subject2'  Faktury zakupowe
+  * KSEFSDK.SUBJECT3 = 'Subject3'  Faktury sprzedaży
+  * KSEFSDK.SUBJECTAUTHORIZED = "SubjectAuthorized"
 
 Zwraca:
 Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszym koncie.
@@ -245,7 +250,7 @@ Działanie:
 Parametr query:
 ```python
      query = {
-            'subjectType': 'Subject2',
+            'subjectType': subject,
             'dateRange': {
                 'dateType': 'Issue',
                 'from': date_from,
@@ -254,6 +259,13 @@ Parametr query:
         }
 ```
 UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
+
+
+## Odczytanie nagłówków faktur zakupowych na podstawie dat
+*get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:*
+
+To samo co: 
+*get_invoices_metadata(self, date_from, date_to ,subject = KSEFSDK.SUBJECT2) -> list[dict]:*
 
 ## Wysłanie paczki faktur w trybie wsadowym
 
