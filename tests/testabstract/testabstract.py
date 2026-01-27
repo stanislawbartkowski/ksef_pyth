@@ -135,6 +135,23 @@ class AbstractTestKsefOnLine(TestKsefMixim):
         self.assertTrue(ok)
         self.assertEqual("Sukces", description)
         self.assertNotEqual("", numerksef)
+        return numerksef
+
+    def _test_wyslij_do_ksef_i_pobierz_sprzedazy(self):
+        numerksef = self._test_wyslij_do_ksef()
+        print(numerksef)
+        # teraz pobierz faktury sprzedazy
+        d1, d2 = T.daj_przedzial_dat()
+        res = self.ksef.get_invoices_metadata(
+            date_from=d1, date_to=d2, subject=KSEFSDK.SUBJECT1)
+        print(res)
+        self.assertIsInstance(res, list)
+        self.assertLess(0, len(res))
+        # wez ostatnia faturę i sprawdź nip sprzedawcy
+        invoice_meta = res[-1]
+        seller = invoice_meta["seller"]["nip"]
+        # czy na pewno nasz nip
+        self.assertEqual(T.NIP, seller)
 
     def _test_wyslij_do_ksef_i_wez_upo(self):
 
@@ -207,6 +224,10 @@ class AbstractTestKsefOnLine(TestKsefMixim):
         invoice_ksef = self.ksef.get_invoice(ksef_number=ksef_number)
         print(invoice_ksef)
         _ = et.fromstring(invoice_ksef)
+
+        seller = invoice_meta["seller"]["nip"]
+        # czy na pewno nip sprzedawcy
+        self.assertEqual(T.NIP_NABYWCA, seller)
 
     def _test_niepoprawny_token_dla_nip(self):
         self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
