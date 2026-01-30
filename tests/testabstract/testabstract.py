@@ -236,3 +236,12 @@ class AbstractTestKsefOnLine(TestKsefMixim):
     def _test_niepoprawny_nip(self):
         self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
             KSEFSDK.DEVKSEF, nip="9999999999", token="xxxxxx yyyyyy"))
+        
+    def _test_odczyt_duzego_przedzialu_metadanych(self):
+        d1 = "2025-12-01"
+        d2 = "2025-12-31"
+        res = self.ksef.get_invoices_metadata(
+            date_from=d1, date_to=d2, subject=KSEFSDK.SUBJECT1)
+        print(f"Odczytano {len(res)} metadanych faktur sprzedaży")
+        self.assertIsInstance(res, list)
+        self.assertLess(0, len(res))
