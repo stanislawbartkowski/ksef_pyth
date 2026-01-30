@@ -252,13 +252,13 @@ Parametr query:
      query = {
             'subjectType': subject,
             'dateRange': {
-                'dateType': 'Issue',
+                'dateType': 'PermanentStorage',
                 'from': date_from,
                 'to': date_to
             }
         }
 ```
-UWAGA: Metoda ustawia maksymalny zakres stronicowania (pageSize=250). Nie odczytuje listy na podstawie stronicowania. Jeśli lista faktur w zakresie dat przekracza 250 (zwrotny parametr hasMore), to wyrzucany jest wyjątek.
+UWAGA: Faktury są odczytywane przyrostowe z rozmiarem strony 250. Nie jest natomiast obsługiwnay przypadek isTrucated. W takiej sytuacji wyrzucany jest bład i dane nie są odczytywane.
 
 
 ## Odczytanie nagłówków faktur zakupowych na podstawie dat
