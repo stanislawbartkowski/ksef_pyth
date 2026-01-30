@@ -141,6 +141,9 @@ class TestCertfOnLine(TestAuthCert, AbstractTestKsefOnLine):
     def test_niepoprawny_nip(self):
         self._test_niepoprawny_nip()
 
+    def test_oodczyt_duzego_przedzialu_faktur(self):
+        self._test_odczyt_duzego_przedzialu_metadanych()
+
 
 class TestKsefBatch(TestAuthToken, TestKsefMixim):
 

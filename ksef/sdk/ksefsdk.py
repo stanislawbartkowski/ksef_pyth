@@ -42,6 +42,7 @@ class KSEFSDK(HOOKHTTP):
     SUBJECT2 = 'Subject2'  # nabywca
     SUBJECT3 = 'Subject3'  # Podmiot 3
     SUBJECTAUTHORIZED = "SubjectAuthorized"  # Podmiot upoważniony
+    _PAGE_SIZE = 250
 
     _env_dict = {
         DEVKSEF: 'https://api-test.ksef.mf.gov.pl',
@@ -225,21 +226,34 @@ class KSEFSDK(HOOKHTTP):
         return response.text
 
     def get_invoices_metadata(self, date_from: str, date_to: str, subject: str) -> list[dict]:
-        end_point = 'invoices/query/metadata?pageSize=250'
-        query = {
-            'subjectType': subject,
-            'dateRange': {
-                'dateType': 'Issue',
-                'from': date_from,
-                'to': date_to
+        invoices = []
+        pageOffset = 0
+        while True:
+            end_point = f'invoices/query/metadata?pageSize={self._PAGE_SIZE}&pageOffset={pageOffset}'
+            query = {
+                'subjectType': subject,
+                'dateRange': {
+                    'dateType': 'PermanentStorage',
+                    'from': date_from,
+                    'to': date_to
+                }
             }
-        }
-        response = self.hook(endpoint=end_point, body=query)
-        hasMore = response['hasMore']
-        if hasMore:
-            raise ValueError(
-                'Zbyt duża liczba faktur do pobrania (max 250), zawęź zakres dat')
-        return response['invoices']
+            response = self.hook(endpoint=end_point, body=query)
+            invoices.extend(response['invoices'])
+            mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
+            hasMore = response['hasMore']
+            isTruncated = response['isTruncated']
+            if hasMore and isTruncated:
+                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęć zapytanie.'
+                raise ValueError(err_mess)
+
+            mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
+            _l(mess)
+            if not hasMore:
+                break
+            pageOffset += 1
+
+        return invoices
 
     def get_invoices_zakupowe_metadata(self, date_from: str, date_to: str) -> list[dict]:
         return self.get_invoices_metadata(date_from, date_to, subject=self.SUBJECT2)
