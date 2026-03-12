@@ -51,6 +51,27 @@ class KSEFSDK(HOOKHTTP):
     }
 
     @staticmethod
+    def rate_limiter(max_retries: int):
+        def decorator(func):
+            def wrapper():
+                sleep_time = KSEFSDK._RATEDELAYTIME
+                for attempt in range(max_retries):
+                    res = func()
+                    if res is not None:
+                        return res
+                    _l(f'Próba {attempt + 1} nie powiodła się, ponawiam po {sleep_time} sekundach...')
+                    sleep(sleep_time)
+                    sleep_time += 2
+                raise TimeoutError(
+                    f'Przekroczono maksymalną liczbę prób: {max_retries}')
+            return wrapper
+        return decorator
+
+    @staticmethod
+    def _reference_number(ref: dict) -> str:
+        return ref['referenceNumber']
+
+    @staticmethod
     def _verify_environment(env: int):
         if env not in KSEFSDK._env_dict:
             raise ValueError(
@@ -70,6 +91,7 @@ class KSEFSDK(HOOKHTTP):
 
     _SESSIONRATELIMITER = 5
     _INVOICERATELIMITER = 10
+    _INVOICEGETRATELIMITER = 15
     _RATEDELAYTIME = 2
 
     def __init__(self, url: str, nip: str, A: ABSTRACTTOKEN):
@@ -103,23 +125,21 @@ class KSEFSDK(HOOKHTTP):
 
     def _session_status(self) -> None:
         url = f'auth/{self._referencenumber}'
-        sleep_time = self._RATEDELAYTIME
-        for _ in range(self._SESSIONRATELIMITER):
+
+        @self.rate_limiter(self._SESSIONRATELIMITER)
+        def _status():
             response = self.hook(
                 url, method=self._METHODGET, bearer=self._BEARERTOKEN)
             status = response['status']['code']
             description = response['status']['description']
             if status == 100:
-                sleep(sleep_time)
-                # increase by 2 seconds
-                sleep_time += 2
+                return None
             elif status == 200:
-                return
+                return True
             else:
                 raise ValueError(
                     f'Session activation failed: {status} - {description}')
-
-        raise TimeoutError('Session activation timed out.')
+        _status()
 
     def _redeem_token(self) -> tuple[str, str]:
         response = self.hook(endpoint='auth/token/redeem',
@@ -154,10 +174,21 @@ class KSEFSDK(HOOKHTTP):
         }
         return request_data
 
+    def _prepare_query(self, subject: str, date_from: str, date_to: str) -> dict:
+        query = {
+            'subjectType': subject,
+            'dateRange': {
+                'dateType': 'PermanentStorage',
+                'from': date_from,
+                'to': date_to
+            }
+        }
+        return query
+
     def start_session(self) -> None:
         request_data = self._prepare_session_data()
         response = self.hook(endpoint='sessions/online', body=request_data)
-        self._sessionreferencenumber = response['referenceNumber']
+        self._sessionreferencenumber = self._reference_number(response)
 
     @staticmethod
     def _daj_description(status: dict) -> str:
@@ -171,8 +202,9 @@ class KSEFSDK(HOOKHTTP):
         # end_point not None - batch processing
         is_interactive = end_point is None
         end_point = end_point or f'sessions/{self._sessionreferencenumber}/invoices/{self._sessioninvoicereferencenumber}'
-        sleep_time = self._RATEDELAYTIME
-        for no in range(self._INVOICERATELIMITER):
+
+        @self.rate_limiter(self._INVOICERATELIMITER)
+        def _status()->tuple[bool, str, str]:
             response = self.hook(endpoint=end_point, method=self._METHODGET)
             code = response['status']['code']
             # stworz komunikat
@@ -181,18 +213,14 @@ class KSEFSDK(HOOKHTTP):
             # czy w trakcie przetwarzania
             if code == 100 or code == 150:
                 _l(description)
-                _l(f'Próba {no+1}, max {self._INVOICERATELIMITER}, czekam {sleep_time} sekund')
-                sleep(sleep_time)
-                sleep_time += 2
-                # spróbuj jeszcze raz
-                continue
-            # albo jest poprawnie albo błąd
+                return None
             if code == 200:
-                self._invoicereferencenumber = response['referenceNumber'] if is_interactive else ''
+                self._invoicereferencenumber = self._reference_number(
+                    response) if is_interactive else ''
                 return True, description, response['ksefNumber'] if is_interactive else ''
             return False, description, ''
+        return _status()
 
-        return False, 'Przekroczona liczba prób przetwarzania', ''
 
     def send_invoice(self, invoice: str) -> tuple[bool, str, str]:
         invoice_len, encrypted_invoice = encrypt_invoice(
@@ -209,7 +237,7 @@ class KSEFSDK(HOOKHTTP):
         }
         end_point = f'sessions/online/{self._sessionreferencenumber}/invoices'
         response = self.hook(endpoint=end_point, body=request_data)
-        self._sessioninvoicereferencenumber = response['referenceNumber']
+        self._sessioninvoicereferencenumber = self._reference_number(response)
         return self._invoice_status()
 
     def pobierz_upo(self, invoicereferencenumber: Optional[str] = None) -> str:
@@ -230,21 +258,15 @@ class KSEFSDK(HOOKHTTP):
         pageOffset = 0
         while True:
             end_point = f'invoices/query/metadata?pageSize={self._PAGE_SIZE}&pageOffset={pageOffset}'
-            query = {
-                'subjectType': subject,
-                'dateRange': {
-                    'dateType': 'PermanentStorage',
-                    'from': date_from,
-                    'to': date_to
-                }
-            }
+            query = self._prepare_query(
+                subject=subject, date_from=date_from, date_to=date_to)
             response = self.hook(endpoint=end_point, body=query)
             invoices.extend(response['invoices'])
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
             hasMore = response['hasMore']
             isTruncated = response['isTruncated']
             if hasMore and isTruncated:
-                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęć zapytanie.'
+                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęź zapytanie.'
                 raise ValueError(err_mess)
 
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
@@ -293,7 +315,7 @@ class KSEFSDK(HOOKHTTP):
         })
         end_point = 'sessions/batch'
         response = self.hook(endpoint=end_point, body=request_data)
-        self._sessionreferencenumber = response['referenceNumber']
+        self._sessionreferencenumber = self._reference_number(response)
         partUpload = response['partUploadRequests']
         # druga faza, wysyłka kolejnych części
         for p in partUpload:
@@ -331,7 +353,7 @@ class KSEFSDK(HOOKHTTP):
             invoiceNumber = i.get('invoiceNumber')
             ksefNumber = i.get('ksefNumber')
             # required
-            referenceNumber = i['referenceNumber']
+            referenceNumber = self._reference_number(i)
             ok = status['code'] == 200
             description = self._daj_description(status)
             upo = i.get('upoDownloadUrl')
@@ -346,3 +368,51 @@ class KSEFSDK(HOOKHTTP):
                 wez_upo(i, xml_upo)
 
         return ok_session, msg, res_invoices
+
+    def get_batch_invoices(self, date_from: str, date_to: str, subject: str) -> tuple[int, bytes]:
+        request_data = self._prepare_session_data()
+        query = self._prepare_query(
+            subject=subject, date_from=date_from, date_to=date_to)
+        metadata = request_data | {'filters':  query}
+        end_point = 'invoices/exports'
+        response = self.hook(endpoint=end_point, body=metadata)
+        reference_number = self._reference_number(response)
+        _l(f'Zainicjowano eksport batchowy, numer referencyjny: {reference_number}')
+        # teraz czekamy na zakończenie przetwarzania
+        end_point = f'invoices/exports/{reference_number}'
+
+        @self.rate_limiter(self._INVOICEGETRATELIMITER)
+        def _get_exported_invoices() -> dict:
+            response = self.hook(endpoint=end_point, method=self._METHODGET)
+            code = response['status']['code']
+            description = response['status']['description']
+            if code == 100:
+                _l('Eksport w trakcie przetwarzania, czekam...')
+                return None
+            if code == 200:
+                _l('Eksport zakończony, pobieram dane...')
+                return response['package']
+            else:
+                raise ValueError(
+                    f'Błąd podczas eksportu: {code} - {description}')
+
+        packages = _get_exported_invoices()
+        isTruncated = packages['isTruncated']
+        if isTruncated:
+            err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęź zapytanie.'
+            raise ValueError(err_mess)
+        # zdekoduj dane
+
+        print(packages)
+        invoiceCount = packages['invoiceCount']
+        parts = packages['parts']
+        zipped_data = bytearray()
+        for part in parts:
+            url = part['url']
+            response = self.hook_response(endpoint=url, requestmethod='GET')
+            encrypted_data = response.content
+            decrypted_data = encrypt_padding(
+                symmetric_key=self._symmetric_key, iv=self._iv, b=encrypted_data)
+            zipped_data.extend(decrypted_data)
+        _l(f'Pobrano i zdekodowano dane, liczba faktur: {invoiceCount}')
+        return invoiceCount, zipped_data
