@@ -1,11 +1,8 @@
 from abc import abstractmethod
-from typing import Callable, Optional
+from typing import Callable
 from time import sleep
-import io
-import tempfile
 
 import unittest
-import zipfile
 
 import xml.etree.ElementTree as et
 

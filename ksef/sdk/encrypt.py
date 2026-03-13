@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import padding as t_padding
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes, base
+from cryptography.hazmat.primitives.ciphers import Cipher, CipherContext, algorithms, modes, base
 
 
 def _encode(s: str) -> bytes:
@@ -101,3 +101,14 @@ def encrypt_padding(symmetric_key: bytes, iv: bytes, b: bytes) -> bytes:
     encrypted_data = encryptor.update(
         padded_data) + encryptor.finalize()
     return encrypted_data
+
+
+def decrypt_aes_cbc(key: bytes, iv: bytes, b: bytes) -> bytes:
+    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+    decryptor: CipherContext = cipher.decryptor()
+    padded = decryptor.update(b) + decryptor.finalize()
+    # Usuń PKCS#7
+    pad_len = padded[-1]
+    if not 1 <= pad_len <= 16:
+        raise ValueError("Nieprawidłowa długość paddingu AES")
+    return padded[:-pad_len]

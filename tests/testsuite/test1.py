@@ -276,3 +276,24 @@ class TestKsefBatchGet(TestAuthToken, TestKsefMixim):
         liczba_faktur, _ = self.ksef.get_batch_invoices(
             subject=self.ksef.SUBJECT1, date_from="2025-11-01", date_to="2025-12-31")
         print(liczba_faktur)
+
+    def test_wyslij_i_odczytaj_fakture(self):
+        invoice, _ = self._prepare_invoice()
+        self.ksef.start_session()
+        status = self.ksef.send_invoice(invoice=invoice)
+        self.ksef.session_terminate()
+        print(status)
+        # teraz odczytaj fakture
+        date_from, date_to = T.daj_przedzial_dat()
+        num, zip_data = self.ksef.get_batch_invoices(
+            date_from=date_from, date_to=date_to, subject=self.ksef.SUBJECT1)
+        print(num)
+        import zipfile
+        with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+            for name in z.namelist():
+                print(name)
+                data = z.read(name)
+                txt = data.decode("utf-8")
+                print(txt)
+                if ".xml" in name:
+                    _ = et.fromstring(data)

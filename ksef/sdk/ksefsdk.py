@@ -9,6 +9,7 @@ import tempfile
 
 from .httphook import HOOKHTTP
 from .encrypt import (
+    decrypt_aes_cbc,
     get_key_and_iv,
     encrypt_symmetric_key, to_base64,
     encrypt_invoice, calculate_hash, encrypt_padding
@@ -204,7 +205,7 @@ class KSEFSDK(HOOKHTTP):
         end_point = end_point or f'sessions/{self._sessionreferencenumber}/invoices/{self._sessioninvoicereferencenumber}'
 
         @self.rate_limiter(self._INVOICERATELIMITER)
-        def _status()->tuple[bool, str, str]:
+        def _status() -> tuple[bool, str, str]:
             response = self.hook(endpoint=end_point, method=self._METHODGET)
             code = response['status']['code']
             # stworz komunikat
@@ -220,7 +221,6 @@ class KSEFSDK(HOOKHTTP):
                 return True, description, response['ksefNumber'] if is_interactive else ''
             return False, description, ''
         return _status()
-
 
     def send_invoice(self, invoice: str) -> tuple[bool, str, str]:
         invoice_len, encrypted_invoice = encrypt_invoice(
@@ -411,8 +411,8 @@ class KSEFSDK(HOOKHTTP):
             url = part['url']
             response = self.hook_response(endpoint=url, requestmethod='GET')
             encrypted_data = response.content
-            decrypted_data = encrypt_padding(
-                symmetric_key=self._symmetric_key, iv=self._iv, b=encrypted_data)
+            decrypted_data = decrypt_aes_cbc(
+                key=self._symmetric_key, iv=self._iv, b=encrypted_data)
             zipped_data.extend(decrypted_data)
         _l(f'Pobrano i zdekodowano dane, liczba faktur: {invoiceCount}')
         return invoiceCount, zipped_data
