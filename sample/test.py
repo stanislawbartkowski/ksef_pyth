@@ -138,6 +138,14 @@ def test10():
     K.session_terminate()
 
 
+def test11():
+    K = T.KS()
+    invoiuce_count, _ = K.get_batch_invoices(
+        subject=KSEFSDK.SUBJECT1, date_from="2025-12-21", date_to="2025-12-31")
+    print(invoiuce_count)
+    K.session_terminate()
+
+
 if __name__ == "__main__":
     # test2()
     # test1()
@@ -149,3 +157,4 @@ if __name__ == "__main__":
     # test8()
     # test9()
     test10()
+    # test11()

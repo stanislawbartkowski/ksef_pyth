@@ -67,7 +67,7 @@ class TestTokenOnLine(TestAuthToken, AbstractTestKsefOnLine):
         self._test_wyslij_do_ksef_i_pobierz_sprzedazy()
 
     def test_wyslij_do_ksef_i_wez_upo(self):
-        self._test_wyslij_do_ksef_i_wez_upo
+        self._test_wyslij_do_ksef_i_wez_upo()
 
     def test_pobierz_fakture_o_zlym_formacie_numeru(self):
         self._test_pobierz_fakture_o_zlym_formacie_numeru()
@@ -209,7 +209,7 @@ class TestKsefBatch(TestAuthToken, TestKsefMixim):
         print(invoices)
         i = invoices[0]
         self.assertFalse(i.ok)
-        self.assertIn('nie może być późniejsza niż data', i.msg)
+        self.assertIn('Nieprawidłowy zakres uprawnień Sprzedawca', i.msg)
 
     def test_wyslij_fakture_sprzedazy(self):
         invoice, invoice_n = self._prepare_invoice()
@@ -268,3 +268,32 @@ class TestKsefBatch(TestAuthToken, TestKsefMixim):
         self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
         # druga niepoprawna
         self.assertFalse(i1.ok)
+
+
+class TestKsefBatchGet(TestAuthToken, TestKsefMixim):
+
+    def test_oodczyt_duzego_przedzialu_faktur(self):
+        liczba_faktur, _ = self.ksef.get_batch_invoices(
+            subject=self.ksef.SUBJECT1, date_from="2025-11-01", date_to="2025-12-31")
+        print(liczba_faktur)
+
+    def test_wyslij_i_odczytaj_fakture(self):
+        invoice, _ = self._prepare_invoice()
+        self.ksef.start_session()
+        status = self.ksef.send_invoice(invoice=invoice)
+        self.ksef.session_terminate()
+        print(status)
+        # teraz odczytaj fakture
+        date_from, date_to = T.daj_przedzial_dat()
+        num, zip_data = self.ksef.get_batch_invoices(
+            date_from=date_from, date_to=date_to, subject=self.ksef.SUBJECT1)
+        print(num)
+        import zipfile
+        with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+            for name in z.namelist():
+                print(name)
+                data = z.read(name)
+                txt = data.decode("utf-8")
+                print(txt)
+                if ".xml" in name:
+                    _ = et.fromstring(data)

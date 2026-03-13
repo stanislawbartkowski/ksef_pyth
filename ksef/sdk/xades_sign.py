@@ -14,7 +14,7 @@ from asn1crypto import core
 
 def sign_xades(auth_xml: bytes, p12pk: bytes, p12pc: bytes) -> bytes:
 
-    useenveloped = False
+    useenveloped = True
     useendesive = True
     if useendesive:
         assert isinstance(p12pk, rsa.RSAPrivateKey) or isinstance(

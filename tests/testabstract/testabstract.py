@@ -1,11 +1,8 @@
 from abc import abstractmethod
-from typing import Callable, Optional
+from typing import Callable
 from time import sleep
-import io
-import tempfile
 
 import unittest
-import zipfile
 
 import xml.etree.ElementTree as et
 
@@ -122,7 +119,7 @@ class AbstractTestKsefOnLine(TestKsefMixim):
         ok, description, _ = status
         self.assertFalse(ok)
         self.assertIn(
-            "Błąd weryfikacji semantyki dokumentu faktury", description)
+            "Nieprawidłowy zakres uprawnień Kontekst", description)
 
     def _test_konwertuj_plik(self):
         self._prepare_invoice()
