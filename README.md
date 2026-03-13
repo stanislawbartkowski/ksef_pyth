@@ -12,6 +12,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Odczytanie faktury na podstawie numeru KSeF
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 * Wysłanie paczki faktur w trybie wsadowym (batchowym)
+* Odczytanie paczki faktur
 
 ## Python
 
@@ -85,6 +86,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Otwarcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch/post) | /api/v2/sessions/batch | send_batch_session_bytes
 | Zamknięcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch~1%7BreferenceNumber%7D~1close/post) | /api/v2/sessions/batch/{referenceNumber}/close | send_batch_session_bytes
 | Pobranie faktur sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices/get) | /api/v2/sessions/{referenceNumber}/invoices | send_batch_session_bytes
+| Pobranie paczki faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1exports/post)  | /api/v2/invoices/exports | get_batch_invoices
 
 # Działanie
 
@@ -148,7 +150,7 @@ Działanie:
 * Autentykacja podpisem XAdES z użyciem wprowadzonych certyfikatów
 
 UWAGA:
-Klucz i certyfikat do podpisu XAdES musi być odczytany zewnętrznie. 
+Klucz i certyfikat do podpisu XAdES muszą być odczytane zewnętrznie. 
 
 Zwraca:
 
@@ -193,7 +195,7 @@ Parametry
 
 Działanie:
 
-Pobiera UPO ostatnio przesłanej faktury jeśli faktura została wysłana z sukcesem. Musi być wywołana bezpośrednio po send_invoice. Dla sesji wsadowej wymaga podania parametru. Dla sesji wsadowej jest alternatywna metoda pobierania pliku UPO.
+Pobiera UPO ostatnio przesłanej faktury, jeśli faktura została wysłana z sukcesem. Musi być wywołana bezpośrednio po send_invoice. Dla sesji wsadowej wymagane jest podanie parametru. Dla sesji wsadowej jest alternatywna metoda pobierania pliku UPO.
 
 Zwraca:
 
@@ -228,7 +230,7 @@ Faktury jako plik XML
 
 Działanie:
 
-Odczytuje fakturę na podstawie numeru KSeF. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracay przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
+Odczytuje fakturę na podstawie numeru KSeF. Jest to numer nadawany przez KSeF po pomyślnym wysłaniu faktury. Numer jest zwracany przez metodę *send_invoice*. Jeśli faktura o podanym numerze nie istnieje, to jest rzucany wyjątek ValueError
 
 ## Odczytanie nagłówków faktur na podstawie dat
 *get_invoices_metadata(self, date_from: str, date_to: str,subject:str) -> list[dict]:*
@@ -243,7 +245,7 @@ Parametry:
   * KSEFSDK.SUBJECTAUTHORIZED = "SubjectAuthorized"
 
 Zwraca:
-Lista nagłówków (metadata) faktur zakupowych w zarejestrowych w KSeF na naszym koncie.
+Lista nagłówków (metadata) faktur zakupowych zarejestrowanych w KSeF na naszym koncie.
 
 Działanie:
 
@@ -258,7 +260,7 @@ Parametr query:
             }
         }
 ```
-UWAGA: Faktury są odczytywane przyrostowe z rozmiarem strony 250. Nie jest natomiast obsługiwnay przypadek isTrucated. W takiej sytuacji wyrzucany jest bład i dane nie są odczytywane.
+UWAGA: Faktury są odczytywane przyrostowo z rozmiarem strony 250. Nie jest natomiast obsługiwany przypadek isTruncated. W takiej sytuacji wyrzucany jest bład i dane nie są odczytywane.
 
 
 ## Odczytanie nagłówków faktur zakupowych na podstawie dat
@@ -284,9 +286,9 @@ Parametry:
 * wez_upo Parametr opcjonalny. Jeśli jest zdefiniowany, to umożliwia natychmiastowe pobranie pliku UPO dla faktur zaakceptowanych w systemie KSeF 2.0
 
 Zwracana wartość tuple[bool, str, list[INVOICES]]
-* ok True/False, sesja zakończona sukcesem. "Sukces" oznacze, że dane były poprawnie skompresowane i przesłane. Natomiast nie oznacza, że wszystkie faktury w paczce zostały zaakceptowane. Jeśli część faktur została odrzucona, to sesja będzie także oznaczona jako "Sukces", zaś status poszczególnych faktur trzeba rozpoznać na podstawie wyniku wywołania.
+* ok True/False, sesja zakończona sukcesem. "Sukces" oznacza, że dane były poprawnie skompresowane i przesłane. Natomiast nie oznacza to, że wszystkie faktury w paczce zostały zaakceptowane. Jeśli część faktur została odrzucona, to sesja będzie także oznaczona jako "Sukces", zaś status poszczególnych faktur trzeba rozpoznać na podstawie wyniku wywołania.
 * msg Komunikat o błędzie w razie niepowodzenia
-* invoices List informacji o wysłanych i zaakceptowanych fakturach. Zawiera informacje zarówno o fakturach zaakceptowanych z sukcesem oraz także o fakturach odrzuconych. Jeden element listy zawiera informacje:
+* invoices List informacji o wysłanych i zaakceptowanych fakturach. Zawiera informacje zarówno o fakturach zaakceptowanych z sukcesem, jak i o fakturach odrzuconych. Jeden element listy zawiera informacje:
   * ok True/False Faktura zaakceptowana lub nie
   * ordinalNumber Numer sekwencyjny faktury w paczce (od 1)
   * msg Komunikat o błędzie jeśli faktura odrzucona
@@ -296,12 +298,22 @@ Zwracana wartość tuple[bool, str, list[INVOICES]]
  
  Sekwencja działań
 
- * Przegląda *payload*, szyfruje poszczególne porcje danych i zapamiętuje w plikach tymczasowym.
+ * Przegląda *payload*, szyfruje poszczególne porcje danych i zapamiętuje je w plikach tymczasowych.
  * Wywołuje *Otwarcie sesji wsadowej*
  * Przesyła kolejne zaszyfrowane porcje danych na podstawie wyniku z *Otwarcie sesji wsadowej*. Pliki tymczasowe są usuwane.
  * Wywołuje *Zamknięcie sesji wsadowej* co inicjalizuje przetwarzanie paczki faktur
  * Czeka na zakończenie przetwarzania, wywołanie *Pobranie statusu sesji*
- * Odczytuje listę faktur po zakończeniu sesji wywołując *Pobranie faktur sesji* i tworzy dane wynikowe. Dla faktur zaakceptowanych wywołuje metodę *wez_upo* 
+ * Odczytuje listę faktur po zakończeniu sesji, wywołując *Pobranie faktur sesji*, i tworzy dane wynikowe. Dla faktur zaakceptowanych wywołuje metodę *wez_upo*
+
+## Odczytanie paczki faktur
+* get_batch_invoices(self, date_from: str, date_to: str, subject: str) -> tuple[int, bytes]:*
+
+Parametry:
+Takie same jak: *get_invoices_metadata(self, date_from: str, date_to: str,subject:str) -> list[dict]:*
+
+Zwracana wartość tuple[liczba_faktur, dane_zip]:
+* liczba_faktur Liczba odczytanych faktur z podanego przedziału. Liczba może być także równa 0
+* dane_zip Odczytane faktury oraz meta_dane w postaci ZIP. Ma zawartość tylko jesli liczba_faktur > 0. 
 
 # Przykłady użycia
 
