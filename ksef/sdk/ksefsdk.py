@@ -30,6 +30,9 @@ def _l(info: str):
     _logger.info(info)
 
 
+_IS_TRUNCATED_WARNING = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęć zapytanie.'
+
+
 class KSEFSDK(HOOKHTTP):
 
     INVOICES = namedtuple(typename='invoices_ksef', field_names=[
@@ -272,7 +275,7 @@ class KSEFSDK(HOOKHTTP):
             hasMore = response['hasMore']
             isTruncated = response['isTruncated']
             if hasMore and isTruncated:
-                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęć zapytanie.'
+                err_mess = _IS_TRUNCATED_WARNING
                 raise ValueError(err_mess)
 
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
@@ -405,11 +408,10 @@ class KSEFSDK(HOOKHTTP):
         packages = _get_exported_invoices()
         isTruncated = packages['isTruncated']
         if isTruncated:
-            err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęź zapytanie.'
+            err_mess = _IS_TRUNCATED_WARNING
             raise ValueError(err_mess)
         # zdekoduj dane
 
-        print(packages)
         invoiceCount = packages['invoiceCount']
         parts = packages['parts']
         zipped_data = bytearray()
