@@ -258,15 +258,21 @@ class KSEFSDK(HOOKHTTP):
         pageOffset = 0
         while True:
             end_point = f'invoices/query/metadata?pageSize={self._PAGE_SIZE}&pageOffset={pageOffset}'
-            query = self._prepare_query(
-                subject=subject, date_from=date_from, date_to=date_to)
+            query = {
+                'subjectType': subject,
+                'dateRange': {
+                    'dateType': 'PermanentStorage',
+                    'from': date_from,
+                    'to': date_to
+                }
+            }
             response = self.hook(endpoint=end_point, body=query)
             invoices.extend(response['invoices'])
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
             hasMore = response['hasMore']
             isTruncated = response['isTruncated']
             if hasMore and isTruncated:
-                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęź zapytanie.'
+                err_mess = 'Ostrzeżenie: Odczytane dane są niepełne (isTruncated=True), zawęć zapytanie.'
                 raise ValueError(err_mess)
 
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
