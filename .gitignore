@@ -5,3 +5,6 @@
 ksef/worktemp/
 tests/worktemp/
 .python-version
+ksef2.0_python.egg-info/top_level.txt
+dist/*
+ksef2.0_python.egg-info/*
