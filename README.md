@@ -26,6 +26,8 @@ Jest to rozszerzenie umożliwiające komunikację z systemem KSeF 2.0 z poziomu 
 
 ## Instalacja
 
+> pip install ksef2.0-python
+
 > pip install git+https://github.com/stanislawbartkowski/ksef_pyth.git
 
 ## Linki
