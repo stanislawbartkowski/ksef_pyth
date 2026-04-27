@@ -233,7 +233,7 @@ class AbstractTestKsefOnLine(TestKsefMixim):
     def _test_niepoprawny_nip(self):
         self.assertRaises(ValueError, lambda: KSEFSDK.initsdk(
             KSEFSDK.DEVKSEF, nip="9999999999", token="xxxxxx yyyyyy"))
-        
+
     def _test_odczyt_duzego_przedzialu_metadanych(self):
         d1 = "2025-12-01"
         d2 = "2025-12-31"
@@ -242,3 +242,17 @@ class AbstractTestKsefOnLine(TestKsefMixim):
         print(f"Odczytano {len(res)} metadanych faktur sprzedaży")
         self.assertIsInstance(res, list)
         self.assertLess(0, len(res))
+
+    def _test_wyslij_fakture_o_istniejacym_numerze(self):
+        invoice, invoice_n = self._prepare_invoice()
+        status = self._wyslij_ksef(invoice=invoice)
+        ok, _, numerksef = status
+        self.assertTrue(ok)
+        self._wez_fakture(ksef_number=numerksef, invoice_n=invoice_n)
+        # jest ok - teraz drugia raz
+        status = self._wyslij_ksef(invoice=invoice)
+        print(status)
+        ok, mess, numerksef = status
+        self.assertFalse(ok)
+        self.assertIn("Duplikat faktury", mess)
+        

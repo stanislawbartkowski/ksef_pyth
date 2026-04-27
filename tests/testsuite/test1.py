@@ -93,6 +93,9 @@ class TestTokenOnLine(TestAuthToken, AbstractTestKsefOnLine):
     def test_niepoprawny_nip(self):
         self._test_niepoprawny_nip()
 
+    def test_wyslij_fakture_o_istniejacym_numerze(self):
+        self._test_wyslij_fakture_o_istniejacym_numerze()
+
 
 class TestCertfOnLine(TestAuthCert, AbstractTestKsefOnLine):
 
@@ -258,7 +261,7 @@ class TestKsefBatch(TestAuthToken, TestKsefMixim):
         zzip = self._zip_b(b=invoice, b1=invoice_zla)
         ok, msg, invoices = self._wyslij_batch(payload=[zzip])
         print(ok, msg, invoices)
-        # powinno być ok, awet jesli faktura błędna
+        # powinno być ok, nawet jesli faktura błędna
         self.assertTrue(ok)
         # pierwsza faktura poprawna
         self.assertEqual(2, len(invoices))
@@ -268,6 +271,20 @@ class TestKsefBatch(TestAuthToken, TestKsefMixim):
         self._wez_fakture(ksef_number=ksef_number, invoice_n=invoice_n)
         # druga niepoprawna
         self.assertFalse(i1.ok)
+
+    def test_wyslij_fakture_o_zduplikowanym_numerze(self):
+        invoice, invoice_n = self._prepare_invoice()
+        zzip = self._zip_b(b=invoice)
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        print(ok, msg, invoices)
+        self.assertTrue(ok)
+
+        # teraz drugi raz
+        ok, msg, invoices = self._wyslij_batch(payload=[zzip])
+        print(ok, msg, invoices)
+        self.assertFalse(ok)
+        i = invoices[0]
+        self.assertIn("Duplikat faktury", i.msg)
 
 
 class TestKsefBatchGet(TestAuthToken, TestKsefMixim):

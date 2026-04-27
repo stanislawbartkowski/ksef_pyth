@@ -8,3 +8,4 @@ tests/worktemp/
 ksef2.0_python.egg-info/top_level.txt
 dist/*
 ksef2.0_python.egg-info/*
+.DS_Store

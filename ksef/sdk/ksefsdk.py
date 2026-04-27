@@ -217,11 +217,13 @@ class KSEFSDK(HOOKHTTP):
             # czy w trakcie przetwarzania
             if code == 100 or code == 150:
                 _l(description)
+                # Wartośc None oznacza w trakcie przetwarzania
                 return None
             if code == 200:
                 self._invoicereferencenumber = self._reference_number(
                     response) if is_interactive else ''
                 return True, description, response['ksefNumber'] if is_interactive else ''
+            _l(description)
             return False, description, ''
         return _status()
 
@@ -365,6 +367,8 @@ class KSEFSDK(HOOKHTTP):
             referenceNumber = self._reference_number(i)
             ok = status['code'] == 200
             description = self._daj_description(status)
+            if not ok:
+                _l(description)
             upo = i.get('upoDownloadUrl')
             i = self.INVOICES(ok=ok, ordinalNumer=ordinalNumber, msg=description,
                               invoiceNumber=invoiceNumber, ksefNumber=ksefNumber, referenceNumber=referenceNumber)
