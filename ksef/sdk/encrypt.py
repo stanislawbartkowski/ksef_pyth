@@ -63,12 +63,6 @@ def encrypt_symmetric_key(symmetricy_key: bytes, public_certificate: str) -> byt
     return encrypted_symmetric_key
 
 
-def _pad(data: bytes) -> bytes:
-    padding_length = 16 - len(data) % 16
-    padding = bytes([padding_length] * padding_length)
-    return data + padding
-
-
 def _daj_cipher_encryptor(symmetric_key: bytes, iv: bytes) -> base.CipherContext:
     cipher = Cipher(
         algorithms.AES(symmetric_key),
@@ -81,8 +75,9 @@ def _daj_cipher_encryptor(symmetric_key: bytes, iv: bytes) -> base.CipherContext
 
 def encrypt_invoice(symmetric_key: bytes, iv: bytes, invoice: str) -> tuple[int, bytes]:
     invoice_bytes = _encode(invoice)
+    padder = t_padding.PKCS7(algorithms.AES(symmetric_key).block_size).padder()
+    padded_invoice = padder.update(invoice_bytes) + padder.finalize()
     encryptor = _daj_cipher_encryptor(symmetric_key=symmetric_key, iv=iv)
-    padded_invoice = _pad(invoice_bytes)
     encrypted_invoice = encryptor.update(padded_invoice) + encryptor.finalize()
     return len(invoice_bytes), encrypted_invoice
 
@@ -111,4 +106,6 @@ def decrypt_aes_cbc(key: bytes, iv: bytes, b: bytes) -> bytes:
     pad_len = padded[-1]
     if not 1 <= pad_len <= 16:
         raise ValueError("Nieprawidłowa długość paddingu AES")
+    if padded[-pad_len:] != bytes([pad_len] * pad_len):
+        raise ValueError("Nieprawidłowy padding AES")
     return padded[:-pad_len]

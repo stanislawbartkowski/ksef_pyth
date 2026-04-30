@@ -274,14 +274,13 @@ class KSEFSDK(HOOKHTTP):
             response = self.hook(endpoint=end_point, body=query)
             invoices.extend(response['invoices'])
             mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
+            _l(mess)
             hasMore = response['hasMore']
             isTruncated = response['isTruncated']
             if hasMore and isTruncated:
                 err_mess = _IS_TRUNCATED_WARNING
                 raise ValueError(err_mess)
 
-            mess = f'Odczytana strona {pageOffset+1}, liczba faktur łącznie: {len(invoices)}'
-            _l(mess)
             if not hasMore:
                 break
             pageOffset += 1
@@ -329,21 +328,28 @@ class KSEFSDK(HOOKHTTP):
         self._sessionreferencenumber = self._reference_number(response)
         partUpload = response['partUploadRequests']
         # druga faza, wysyłka kolejnych części
-        for p in partUpload:
-            method = p['method']
-            number = p['ordinalNumber']
-            tname = e_data[number]
-            # odczytaj zakodowane dane zapamiętane w pliku tymczasowym
-            with open(tname, "rb") as t:
-                encrypted_data = t.read()
-            # usun tymczasowy plik, nie jest potrzebny
-            os.unlink(tname)
-            url = p['url']
-            headers = p['headers']
-            msg = f'Wysyłka części numer {number}'
-            _l(msg)
-            self.hook_response(
-                endpoint=url, data=encrypted_data, requestmethod=method, requestheaders=headers)
+        try:
+            for p in partUpload:
+                method = p['method']
+                number = p['ordinalNumber']
+                tname = e_data.pop(number)
+                # odczytaj zakodowane dane zapamiętane w pliku tymczasowym
+                with open(tname, "rb") as t:
+                    encrypted_data = t.read()
+                # usun tymczasowy plik, nie jest potrzebny
+                os.unlink(tname)
+                url = p['url']
+                headers = p['headers']
+                msg = f'Wysyłka części numer {number}'
+                _l(msg)
+                self.hook_response(
+                    endpoint=url, data=encrypted_data, requestmethod=method, requestheaders=headers)
+        finally:
+            for tname in e_data.values():
+                try:
+                    os.unlink(tname)
+                except OSError:
+                    pass
         # zamknięcie
         end_point = f'sessions/batch/{self._sessionreferencenumber}/close'
         response = self.hook(endpoint=end_point)

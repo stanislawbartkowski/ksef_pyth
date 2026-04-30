@@ -34,7 +34,7 @@ class AUTHTOKEN(ABSTRACTTOKEN):
             public_certificate=self._kseftoken_certificate
         )
         context = {
-            'type:': 'Nip',
+            'type': 'Nip',
             'value': nip
         }
         body = {
@@ -49,16 +49,15 @@ class AUTHTOKEN(ABSTRACTTOKEN):
         return referenceNumber, token
 
 
-def _daj_request_auth(nip: str, challenge: str) -> bytes:
+def _daj_request_auth(nip: str, challenge: str, ftemp) -> bytes:
     patt_xml = os.path.join(os.path.dirname(__file__),
                             "..", "pattern", "request.xml")
-    with tempfile.NamedTemporaryFile("rb", delete=False) as f:
-        dest = f.name
-        d = {
+    dest = ftemp.name
+    d = {
             'CHALLENGE': challenge,
             'NIP': nip
-        }
-        konwertujdok(sou=patt_xml, dest=dest, d=d)
+    }
+    konwertujdok(sou=patt_xml, dest=dest, d=d)
 
     with open(dest, "rb") as f:
         xml_auth = f.read()
@@ -73,13 +72,14 @@ class AUTHCERT(ABSTRACTTOKEN):
         self._p12pc = p12pc
 
     def auth_ksef(self, H: HOOKHTTP, nip: str, challenge: str) -> tuple[str, str]:
-        xml_aut = _daj_request_auth(nip=nip, challenge=challenge)
-        xades_xml = sign_xades(
-            auth_xml=xml_aut, p12pk=self._p12pk, p12pc=self._p12pc)
-        end_point = 'auth/xades-signature'
-        response = H.hook_response(
-            endpoint=end_point, bearer=H._NOBEARER, xml_data=xades_xml)
-        result = response.json()
-        referenceNumber = result['referenceNumber']
-        token = result['authenticationToken']['token']
-        return referenceNumber, token
+        with tempfile.NamedTemporaryFile("rb", delete=True) as f:
+            xml_aut = _daj_request_auth(nip=nip, challenge=challenge, ftemp=f)
+            xades_xml = sign_xades(
+                auth_xml=xml_aut, p12pk=self._p12pk, p12pc=self._p12pc)
+            end_point = 'auth/xades-signature'
+            response = H.hook_response(
+                endpoint=end_point, bearer=H._NOBEARER, xml_data=xades_xml)
+            result = response.json()
+            referenceNumber = result['referenceNumber']
+            token = result['authenticationToken']['token']
+            return referenceNumber, token

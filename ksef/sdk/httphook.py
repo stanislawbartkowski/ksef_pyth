@@ -28,6 +28,7 @@ class HOOKHTTP:
     _METHODGET = 2
 
     _RETRY_AFTER = 'Retry-After'
+    _TIMEOUT = 30
 
     def __init__(self, base_url: str):
         self._base_url = base_url
@@ -66,26 +67,30 @@ class HOOKHTTP:
         while True:
             if requestmethod is not None:
                 response = requests.request(
-                    url=url, data=data, method=requestmethod, headers=requestheaders)
+                    url=url, data=data, method=requestmethod, headers=requestheaders, timeout=self._TIMEOUT)
             else:
                 if method == self._METHODDEL:
-                    response = requests.delete(url, headers=headers)
+                    response = requests.delete(
+                        url, headers=headers, timeout=self._TIMEOUT)
                 elif method == self._METHODPOST:
                     if xml_data is None:
                         response = requests.post(
-                            url, json=body or {}, headers=headers)
+                            url, json=body or {}, headers=headers, timeout=self._TIMEOUT)
                     else:
-                        headers = headers | {}
-                        headers |= {"Content-Type": "application/xml"}
+                        headers = headers | {"Content-Type": "application/xml"}
                         response = requests.post(
-                            url, data=xml_data, headers=headers)
+                            url, data=xml_data, headers=headers, timeout=self._TIMEOUT)
                 else:
-                    response = requests.get(url, headers=headers)
+                    response = requests.get(
+                        url, headers=headers, timeout=self._TIMEOUT)
 
             if response.status_code == 400:
-                exce = response.json()['exception']['exceptionDetailList'][0]
-                details = exce['details']
-                errmsg = ' '.join(details)
+                try:
+                    exce = response.json()['exception']['exceptionDetailList'][0]
+                    details = exce['details']
+                    errmsg = ' '.join(details)
+                except (KeyError, IndexError, TypeError, ValueError):
+                    errmsg = response.text
                 _logger.error(errmsg)
                 raise ValueError(errmsg)
 

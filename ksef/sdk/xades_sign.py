@@ -37,7 +37,7 @@ def sign_xades(auth_xml: bytes, p12pk: bytes, p12pc: bytes) -> bytes:
                     tosign,
                     ec.ECDSA(getattr(hashes, algosig.upper())())
                 )
-                length = 32  # =256/8 czyli aes-256 TODO zamienić na zmienną zależną od długości klucza
+                length = (p12pk.key_size + 7) // 8
                 d = core.load(sig)
                 dr = d[0].native.to_bytes(length, byteorder="big")
                 ds = d[1].native.to_bytes(length, byteorder="big")
