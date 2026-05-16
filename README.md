@@ -13,6 +13,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 * Wysłanie paczki faktur w trybie wsadowym (batchowym)
 * Odczytanie paczki faktur
+* Obsługa kodu 429 Too Many Requests
 
 ## Python
 
@@ -123,7 +124,8 @@ Błędy (także z konstruktora klasy) są wyrzucane jako HTTPError lub ValueErro
 *KSEFSDK.initsdk(env: int, nip: str, token: str)*
 
 Parametry:
-* env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF. Uwaga: testowane tylko w środowisku KSEFSDK.DEVKSEF
+* env Może przybierać cztery wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF, KSEFSDK.UNITTEST. Testowane w środowisku testowym oraz produkcyjnym
+* env=KSEFSDK.UNITTEST. To samo co KSEFSDK.DEVKSEF. Jedyna różnica to obchodzenie kodu 429
 * nip NIP do uwierzytelnienia
 * token Token KSeF do uwierzytelnienia
 
@@ -141,7 +143,7 @@ Zainicjalizowana klasa KSEFSDK jeśli autentykacja przebiegła pomyślnie. Jeśl
 *KSEFSDK.initsdkcert(env: int, nip: str, p12pk: bytes, p12pc: bytes)*
 
 Parametry:
-* env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF. Uwaga: testowane tylko w środowisku KSEFSDK.DEVKSEF
+* env Może przybierać trzy wartości: KSEFSDK.DEVKSEF, KSEFSDK.PREKSEF, KSEFSDK.PRODKSEF, KSEFSDK.UNITTEST
 * nip NIP do uwierzytelnienia
 * p12pk Odczytany klucz prywatny
 * p12pc Odczytany certyfikat
