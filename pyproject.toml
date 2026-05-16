@@ -10,6 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project.urls]
 Repository = "https://github.com/stanislawbartkowski/ksef_pyth"
+Changelog = "https://github.com/stanislawbartkowski/ksef_pyth/blob/main/release.md"
 
 [project]
 name = "ksef2.0_python"
