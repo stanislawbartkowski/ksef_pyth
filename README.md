@@ -328,7 +328,7 @@ https://github.com/stanislawbartkowski/ksef_pyth/blob/main/sample/test.py
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e ".[dev]"
 code .
 ```
 

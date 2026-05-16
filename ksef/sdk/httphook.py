@@ -29,11 +29,14 @@ class HOOKHTTP:
 
     _RETRY_AFTER = 'Retry-After'
     _TIMEOUT = 30
+    _MAX_429_RETRIES = 5
+    _DEFAULT_RETRY_DELAY = 5
 
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, unitest: bool):
         self._base_url = base_url
         self._access_token: str = ''
         self._authenticationtoken: str = ''
+        self._unittest: bool = unitest
 
     def set_tokes(self, access_token: str, authentication_token: str):
         self._access_token = access_token
@@ -86,7 +89,8 @@ class HOOKHTTP:
 
             if response.status_code == 400:
                 try:
-                    exce = response.json()['exception']['exceptionDetailList'][0]
+                    exce = response.json()[
+                        'exception']['exceptionDetailList'][0]
                     details = exce['details']
                     errmsg = ' '.join(details)
                 except (KeyError, IndexError, TypeError, ValueError):
@@ -94,11 +98,16 @@ class HOOKHTTP:
                 _logger.error(errmsg)
                 raise ValueError(errmsg)
 
-            if response.status_code == 429 and self._RETRY_AFTER in response.json():
-                no_of_sec = response.json()[self._RETRY_AFTER]
+            if response.status_code == 429 and not self._unittest:
+                # RETRY_AFTER can be even 1 hours which strangle test
+                # eneter limiter loop only if not unittest
                 no_request += 1
-                mess = f'Code: {response.status_code}, próba {no_request},  Czekam {no_of_sec} przed ponowną próbą'
-                _l(mess)
+                if no_request > self._MAX_429_RETRIES:
+                    break
+                retry_after = response.headers.get(self._RETRY_AFTER)
+                no_of_sec = int(
+                    retry_after) if retry_after is not None else self._DEFAULT_RETRY_DELAY * (2 ** (no_request - 1))
+                _l(f'429 Too Many Requests, próba {no_request}/{self._MAX_429_RETRIES}, czekam {no_of_sec}s')
                 sleep(no_of_sec)
             else:
                 break

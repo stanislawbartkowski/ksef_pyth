@@ -41,6 +41,7 @@ class KSEFSDK(HOOKHTTP):
     DEVKSEF = 0
     PREKSEF = 1
     PRODKSEF = 2
+    UNITTEST = 3
 
     SUBJECT1 = 'Subject1'  # sprzedawca
     SUBJECT2 = 'Subject2'  # nabywca
@@ -51,7 +52,8 @@ class KSEFSDK(HOOKHTTP):
     _env_dict = {
         DEVKSEF: 'https://api-test.ksef.mf.gov.pl',
         PREKSEF: 'https://api-demo.ksef.mf.gov.pl',
-        PRODKSEF: 'https://api.ksef.mf.gov.pl'
+        PRODKSEF: 'https://api.ksef.mf.gov.pl',
+        UNITTEST: 'https://api-test.ksef.mf.gov.pl',
     }
 
     @staticmethod
@@ -85,21 +87,21 @@ class KSEFSDK(HOOKHTTP):
     def initsdk(cls, env: int, nip: str, token: str):
         KSEFSDK._verify_environment(env)
         A = AUTHTOKEN(token=token)
-        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A)
+        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A, unittest=env == cls.UNITTEST)
 
     @classmethod
     def initsdkcert(cls, env: int, nip: str, p12pk: bytes, p12pc: bytes):
         KSEFSDK._verify_environment(env)
         A = AUTHCERT(p12pk=p12pk, p12pc=p12pc)
-        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A)
+        return cls(url=KSEFSDK._env_dict[env], nip=nip, A=A, unittest=env == cls.UNITTEST)
 
     _SESSIONRATELIMITER = 5
     _INVOICERATELIMITER = 10
     _INVOICEGETRATELIMITER = 15
     _RATEDELAYTIME = 2
 
-    def __init__(self, url: str, nip: str, A: ABSTRACTTOKEN):
-        super(KSEFSDK, self).__init__(base_url=url)
+    def __init__(self, url: str, nip: str, A: ABSTRACTTOKEN, unittest: bool):
+        super(KSEFSDK, self).__init__(base_url=url, unitest=unittest)
         challenge, timestamp = self._get_challengeandtimestamp()
         kseftoken_certificate, self._symmetrickey_certificate = self._get_public_certificate()
         A.set_params(timestamp=timestamp,

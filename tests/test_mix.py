@@ -44,12 +44,12 @@ def workdatadir(filexml: str) -> str:
 
 
 def KS():
-    K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=NIP, token=TOKEN)
+    K = KSEFSDK.initsdk(KSEFSDK.UNITTEST, nip=NIP, token=TOKEN)
     return K
 
 
 def KSNABYWCA():
-    K = KSEFSDK.initsdk(KSEFSDK.DEVKSEF, nip=NIP_NABYWCA, token=TOKEN_MABYWCA)
+    K = KSEFSDK.initsdk(KSEFSDK.UNITTEST, nip=NIP_NABYWCA, token=TOKEN_MABYWCA)
     return K
 
 def _toiso(date: datetime.date) -> str:
@@ -74,7 +74,7 @@ def read_cert() -> tuple[bytes, bytes]:
 
 def KS_CERT():
     p12pk, p12pc = read_cert()
-    K = KSEFSDK.initsdkcert(KSEFSDK.DEVKSEF, nip=NIP, p12pk=p12pk, p12pc=p12pc)
+    K = KSEFSDK.initsdkcert(KSEFSDK.UNITTEST, nip=NIP, p12pk=p12pk, p12pc=p12pc)
     return K
 
 def daj_przedzial_dat() -> tuple[str,str]:

@@ -13,7 +13,7 @@ Repository = "https://github.com/stanislawbartkowski/ksef_pyth"
 
 [project]
 name = "ksef2.0_python"
-version = "1.1.1"
+version = "1.1.4"
 description = "A Python client for integrating with KSeF 2.0 (Krajowy System e-Faktur), Poland's national electronic invoicing platform"
 dependencies = [
   "requests",
@@ -30,3 +30,20 @@ authors = [
   {name = "Stanisław Bartkowski", email = "stanislawbartkowski@gmail.com"},
 ]
 readme = "README.md"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/testsuite"]
+pythonpath = [".", "tests"]
+python_files = "test*.py"
+log_cli = true
+log_cli_level = "DEBUG"
+log_cli_format = "%(asctime)s %(message)s"
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10

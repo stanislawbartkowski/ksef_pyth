@@ -11,19 +11,19 @@ Python 3 SDK for integrating with the Polish KSeF 2.0 (Krajowy System e-Faktur) 
 ```bash
 # Setup
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+pip install -e .
 
 # Run all tests
-python -m unittest discover tests
+pytest
 
 # Run a specific test file
-python -m unittest tests.testsuite.test1
+pytest tests/testsuite/test1.py
 
 # Lint (critical errors only)
-flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+ruff check . --select=E9,F63,F7,F82
 
-# Lint (full, max-line-length=140)
-flake8 . --count --exit-zero --max-complexity=10 --max-line-length=140 --statistics
+# Lint (full)
+ruff check .
 
 # Build distribution
 python -m build

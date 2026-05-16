@@ -1,8 +1,0 @@
-requests
-cryptography
-python-dateutil
-endesive
-lxml
-signxml
-asn1crypto
-xml-konwerter
