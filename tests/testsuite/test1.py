@@ -64,3 +64,6 @@ class TestOnLine(AbstractTestKsefOnLine):
 
     def test_odczyt_duzego_przedzialu_faktur(self):
         self._test_odczyt_duzego_przedzialu_metadanych()
+
+    def test_get_list_of_tokens(self):
+        self._test_get_list_of_tokens()

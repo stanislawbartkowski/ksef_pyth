@@ -195,6 +195,11 @@ class AbstractTestKsefOnLine(TestKsefMixim):
         assert isinstance(res, list)
         assert len(res) > 0
 
+    def _test_get_list_of_tokens(self):
+        tokens = self.ksef.get_list_of_tokens()
+        print(tokens)
+        assert isinstance(tokens, list)
+
     def _test_wyslij_fakture_o_istniejacym_numerze(self):
         invoice, invoice_n = self._prepare_invoice()
         status = self._wyslij_ksef(invoice=invoice)

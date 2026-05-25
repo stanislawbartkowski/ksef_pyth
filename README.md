@@ -13,6 +13,7 @@ Zaimplementowane są następujące funkcjonalności:
 * Odczytanie nagłówków faktur zakupowych na podstawie zakresu dat
 * Wysłanie paczki faktur w trybie wsadowym (batchowym)
 * Odczytanie paczki faktur
+* Pobranie listy tokenów KSeF
 * Obsługa kodu 429 Too Many Requests
 
 ## Python
@@ -90,6 +91,7 @@ Należy zalogować się do aplikacji testowej za pomocą fikcyjnego NIP i w zak�
 | Zamknięcie sesji wsadowej | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Wysylka-wsadowa/paths/~1sessions~1batch~1%7BreferenceNumber%7D~1close/post) | /api/v2/sessions/batch/{referenceNumber}/close | send_batch_session_bytes
 | Pobranie faktur sesji | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Status-wysylki-i-UPO/paths/~1sessions~1%7BreferenceNumber%7D~1invoices/get) | /api/v2/sessions/{referenceNumber}/invoices | send_batch_session_bytes
 | Pobranie paczki faktury | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Pobieranie-faktur/paths/~1invoices~1exports/post)  | /api/v2/invoices/exports | get_batch_invoices
+| Pobranie listy tokenów | [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Tokeny-KSeF/paths/~1tokens/get) | /api/v2/tokens | get_list_of_tokens
 
 # Działanie
 
@@ -318,6 +320,18 @@ Takie same jak: *get_invoices_metadata(self, date_from: str, date_to: str,subjec
 Zwracana wartość tuple[liczba_faktur, dane_zip]:
 * liczba_faktur Liczba odczytanych faktur z podanego przedziału. Liczba może być także równa 0
 * dane_zip Odczytane faktury oraz meta_dane w postaci ZIP. Ma zawartość tylko jesli liczba_faktur > 0. 
+
+## Pobranie listy tokenów KSeF
+
+*get_list_of_tokens() -> list[dict]*
+
+Działanie:
+
+Pobiera listę tokenów KSeF zarejestrowanych dla uwierzytelnionego NIP.
+
+Zwraca:
+
+Lista tokenów w postaci słowników zwracanych przez API KSeF.
 
 # Przykłady użycia
 
