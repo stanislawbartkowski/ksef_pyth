@@ -145,6 +145,11 @@ def test11():
     print(invoiuce_count)
     K.session_terminate()
 
+def test12():
+    K = T.KS()
+    d = K.get_list_of_tokens()
+    print(d)
+    K.session_terminate()
 
 if __name__ == "__main__":
     # test2()
@@ -156,5 +161,6 @@ if __name__ == "__main__":
     # test7()
     # test8()
     # test9()
-    test10()
+    # test10()
     # test11()
+    test12()

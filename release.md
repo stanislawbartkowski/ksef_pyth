@@ -1,3 +1,6 @@
+### Wersja 1.1.3 Date: 2026/05/25
+- Dodanie metody get_list_of_tokens do pobrania listy tokenów KSeF (/v2/tokens)
+- Dodanie metody get_token_status do pobrania statusu tokena KSeF (/v2/tokens/{referenceNumber})
 ### Wersja 1.1.2 Date: 2026/05/16
 - Replace flake8/unittest with ruff/pytest across CI, VSCode settings, and docs
 - Add KSEFSDK.UNITTEST=3 env constant that disables 429 retry sleep during tests
