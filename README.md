@@ -331,7 +331,9 @@ Pobiera listę tokenów KSeF zarejestrowanych dla uwierzytelnionego NIP.
 
 Zwraca:
 
-Lista tokenów w postaci słowników zwracanych przez API KSeF.
+Lista tokenów w postaci słowników zwracanych przez API KSeF. 
+
+Lista w formacie [link](https://api-test.ksef.mf.gov.pl/docs/v2/index.html#tag/Tokeny-KSeF/paths/~1tokens/get)
 
 # Przykłady użycia
 
