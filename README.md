@@ -18,7 +18,7 @@ Zaimplementowane są następujące funkcjonalności:
 
 ## Python
 
-Testowane dla wersji: 3.10, 3.11 i 3.12
+Testowane dla wersji: 3.10, 3.11, 3.12, 3.13 i 3.14
 
 ## Patrz także
 
