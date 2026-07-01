@@ -18,7 +18,10 @@ version = "1.1.3"
 description = "A Python client for integrating with KSeF 2.0 (Krajowy System e-Faktur), Poland's national electronic invoicing platform"
 dependencies = [
   "requests",
-  "cryptography",
+  # cryptography>=47 rejects KSeF certificates that carry an invalid NULL
+  # parameter in the ECDSA signature-algorithm field (a known Java encoding
+  # bug). Pin below 47 until the certs are re-issued or a lenient loader lands.
+  "cryptography<47",
   "python-dateutil",
   "endesive",
   "lxml",
