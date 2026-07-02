@@ -1,3 +1,5 @@
+### Wersja 1.1.3r1 Date 2026/07/01
+- cryptography>=47 rejects KSeF certificates that carry an invalid NULL parameter in the ECDSA signature-algorithm field (a known Java encoding bug). Pin below 47 until the certs are re-issued or a lenient loader lands "cryptography<47",
 ### Wersja 1.1.3 Date: 2026/05/25
 - Dodanie metody get_list_of_tokens do pobrania listy tokenów KSeF (/v2/tokens)
 - Dodanie metody get_token_status do pobrania statusu tokena KSeF (/v2/tokens/{referenceNumber})
